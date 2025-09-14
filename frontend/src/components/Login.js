@@ -9,7 +9,6 @@ const Login = () => {
   const [darkMode, setDarkMode] = useState(false);
   const { login } = useAuth();
 
-  // Dark mode kontrolü
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
     setDarkMode(savedDarkMode);
@@ -46,13 +45,13 @@ const Login = () => {
   return (
     <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-md w-full space-y-8">
-        <div className="flex justify-end">
+        <div className="flex justify-end mb-4">
           <button
             onClick={toggleDarkMode}
             className={`p-2 rounded-lg transition-colors ${
               darkMode 
                 ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
             }`}
             title={darkMode ? 'Açık moda geç' : 'Koyu moda geç'}
           >
@@ -61,73 +60,63 @@ const Login = () => {
         </div>
         <div>
           <h2 className={`mt-6 text-center text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Mintdegisn Teklif Sistemi
+            Transport Offerte System
           </h2>
           <p className={`mt-2 text-center text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Devam etmek için giriş yapın
+            Anmelden um fortzufahren
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className={`rounded-lg shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="p-6">
+          <div className={`card ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+            <div className="card-body">
               {error && (
-                <div className={`mb-4 p-3 rounded-md border ${
+                <div className={`mb-4 p-3 rounded-md ${
                   darkMode 
-                    ? 'bg-red-900 border-red-700 text-red-300' 
-                    : 'bg-red-50 border-red-200 text-red-700'
+                    ? 'bg-red-900 border border-red-700 text-red-300' 
+                    : 'bg-red-50 border border-red-200 text-red-700'
                 }`}>
                   {error}
                 </div>
               )}
               
-              <div className="mb-4">
-                <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                  E-Mail
-                </label>
+              <div className="form-group">
+                <label className={`form-label ${darkMode ? 'text-gray-200' : ''}`}>E-Mail</label>
                 <input
                   type="email"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`form-input ${
                     darkMode 
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      : ''
                   }`}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="email@example.com"
+                  placeholder="ihre@email.com"
                 />
               </div>
               
-              <div className="mb-6">
-                <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                  Şifre
-                </label>
+              <div className="form-group">
+                <label className={`form-label ${darkMode ? 'text-gray-200' : ''}`}>Passwort</label>
                 <input
                   type="password"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`form-input ${
                     darkMode 
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      : ''
                   }`}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="Şifreniz"
+                  placeholder="Ihr Passwort"
                 />
               </div>
               
               <button
                 type="submit"
-                className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
-                  loading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : darkMode
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                className="btn btn-primary w-full"
                 disabled={loading}
               >
-                {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+                {loading ? 'Wird angemeldet...' : 'Anmelden'}
               </button>
             </div>
           </div>

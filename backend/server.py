@@ -347,6 +347,14 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
     
     # Create Swiss QR Bill using qrbill library
     try:
+        # Extract city from postal code if available
+        debtor_city = ""
+        if hasattr(quote_obj.customer, 'city'):
+            debtor_city = quote_obj.customer.city
+        else:
+            # Try to extract from address
+            debtor_city = "Schweiz"
+            
         my_bill = QRBill(
             account=iban,
             creditor={
@@ -358,12 +366,12 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
             },
             debtor={
                 'name': quote_obj.customer.company_name[:70],
-                'pcode': quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else '0000',
-                'city': 'Schweiz',
+                'pcode': quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else '',
+                'city': debtor_city,
                 'street': quote_obj.customer.address[:70],
                 'country': 'CH'
             },
-            amount=f"{quote_obj.grand_total:.2f}",
+            amount=str(quote_obj.grand_total),
             currency='CHF',
             additional_information=f"Transport-Offerte {quote_obj.quote_number}",
             language='de'
@@ -407,21 +415,45 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
         import segno
         from PIL import Image, ImageDraw
         
-        # Build QR data string
+        # Build QR data string according to Swiss Payment Standards 2.0
+        # Reference: https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf
         qr_data_lines = [
-            "SPC", "0200", "1", iban, "K",
-            company.get('name', 'Ammann & Co Transport GmbH')[:70],
-            street[:70], "", "3000", "Bern", "CH",
-            "", "", "", "", "", "", "",
-            f"{quote_obj.grand_total:.2f}", "CHF", "K",
-            quote_obj.customer.company_name[:70],
-            quote_obj.customer.address[:70], "",
-            quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else "0000",
-            "", "CH", "NON", "",
-            f"Transport-Offerte {quote_obj.quote_number}",
-            "EPD", "", "", ""
+            "SPC",  # QRType
+            "0200",  # Version
+            "1",  # Coding (1 = UTF-8)
+            iban,  # IBAN
+            "K",  # Creditor Address Type (K = combined, S = structured)
+            company.get('name', 'Ammann & Co Transport GmbH')[:70],  # Creditor Name
+            street[:70],  # Creditor Street or Address Line 1
+            "",  # Creditor Building Number or Address Line 2
+            "3000",  # Creditor Postal Code
+            "Bern",  # Creditor Town
+            "CH",  # Creditor Country
+            "",  # Ultimate Creditor Address Type
+            "",  # Ultimate Creditor Name
+            "",  # Ultimate Creditor Street
+            "",  # Ultimate Creditor Building Number
+            "",  # Ultimate Creditor Postal Code
+            "",  # Ultimate Creditor Town
+            "",  # Ultimate Creditor Country
+            f"{quote_obj.grand_total:.2f}",  # Amount
+            "CHF",  # Currency
+            "K",  # Debtor Address Type
+            quote_obj.customer.company_name[:70],  # Debtor Name
+            quote_obj.customer.address[:70],  # Debtor Street or Address Line 1
+            "",  # Debtor Building Number or Address Line 2
+            quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else "0000",  # Debtor Postal Code
+            "",  # Debtor Town (leave empty or add city name)
+            "CH",  # Debtor Country
+            "NON",  # Reference Type (NON = without reference, QRR = QR reference, SCOR = Creditor Reference)
+            "",  # Reference (empty for NON type)
+            f"Transport-Offerte {quote_obj.quote_number}",  # Additional Information (Unstructured Message)
+            "EPD",  # Trailer (End Payment Data)
+            "",  # Bill Information
+            "",  # Alternative Procedure Parameter 1
+            "",  # Alternative Procedure Parameter 2
         ]
-        qr_data = "\r\n".join(qr_data_lines)
+        qr_data = "\n".join(qr_data_lines)  # Use \n instead of \r\n
         
         # Create QR code with segno
         qr = segno.make(qr_data, error='m', mode='byte')

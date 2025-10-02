@@ -348,12 +348,9 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
     # Create Swiss QR Bill using qrbill library
     try:
         # Extract city from postal code if available
-        debtor_city = ""
+        debtor_city = "Schweiz"
         if hasattr(quote_obj.customer, 'city'):
             debtor_city = quote_obj.customer.city
-        else:
-            # Try to extract from address
-            debtor_city = "Schweiz"
             
         my_bill = QRBill(
             account=iban,
@@ -366,42 +363,28 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
             },
             debtor={
                 'name': quote_obj.customer.company_name[:70],
-                'pcode': quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else '',
+                'pcode': quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else '8000',
                 'city': debtor_city,
                 'street': quote_obj.customer.address[:70],
                 'country': 'CH'
             },
-            amount=str(quote_obj.grand_total),
+            amount='%.2f' % quote_obj.grand_total,  # String format olarak
             currency='CHF',
             additional_information=f"Transport-Offerte {quote_obj.quote_number}",
             language='de'
         )
         
-        # Generate QR code as image (with Swiss cross in the center)
-        # qrbill library automatically adds the Swiss cross
-        bill_buffer = BytesIO()
-        my_bill.as_svg(bill_buffer)
-        bill_buffer.seek(0)
+        # Generate QR code as SVG (with Swiss cross in the center automatically)
+        svg_buffer = BytesIO()
+        my_bill.as_svg(svg_buffer)
+        svg_buffer.seek(0)
+        svg_content = svg_buffer.getvalue()
         
-        # Convert SVG to PNG for better compatibility
-        from PIL import Image
-        import cairosvg
-        
-        # Try using SVG directly or convert to PNG
-        try:
-            # Convert SVG to PNG
-            png_buffer = BytesIO()
-            cairosvg.svg2png(bytestring=bill_buffer.getvalue(), write_to=png_buffer, scale=2.0)
-            png_buffer.seek(0)
-            img_base64 = base64.b64encode(png_buffer.getvalue()).decode()
-        except:
-            # Fallback: return SVG as base64
-            bill_buffer.seek(0)
-            svg_base64 = base64.b64encode(bill_buffer.getvalue()).decode()
-            img_base64 = svg_base64
+        # SVG'yi base64'e çevir
+        svg_base64 = base64.b64encode(svg_content).decode()
             
         return {
-            "qr_code": f"data:image/png;base64,{img_base64}",
+            "qr_code": f"data:image/svg+xml;base64,{svg_base64}",
             "payment_info": {
                 "iban": iban,
                 "amount": f"{quote_obj.grand_total:.2f}",

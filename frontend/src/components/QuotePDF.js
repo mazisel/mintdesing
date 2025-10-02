@@ -43,14 +43,21 @@ const QuotePDF = () => {
   const fetchSwissQR = async () => {
     try {
       const token = localStorage.getItem('token');
+      console.log('🇨🇭 Fetching Swiss QR for quote:', id);
       const response = await axios.get(`${API}/quotes/${id}/swiss-qr`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      console.log('🇨🇭 Swiss QR Response:', {
+        qr_length: response.data.qr_code?.length,
+        qr_start: response.data.qr_code?.substring(0, 100),
+        payment_info: response.data.payment_info
+      });
       setSwissQR(response.data);
+      console.log('🇨🇭 Swiss QR state set successfully');
     } catch (error) {
-      console.error('Error fetching Swiss QR code:', error);
+      console.error('❌ Error fetching Swiss QR code:', error);
     }
   };
 
@@ -335,6 +342,7 @@ const QuotePDF = () => {
           </div>
 
           {/* Swiss QR Code Section */}
+          {swissQR && console.log('🇨🇭 Rendering Swiss QR:', swissQR.qr_code?.substring(0, 50))}
           {swissQR && (
             <div className="swiss-qr-section" style={{
               marginTop: '2rem',

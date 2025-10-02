@@ -1,16 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../App';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Dashboard = () => {
   const { user, logout, isAdmin } = useAuth();
+  const [systemTitle, setSystemTitle] = useState('Transport Offerte System');
+
+  useEffect(() => {
+    fetchSystemSettings();
+  }, []);
+
+  const fetchSystemSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/system-settings`);
+      setSystemTitle(response.data.title);
+    } catch (error) {
+      console.error('Error fetching system settings:', error);
+    }
+  };
 
   return (
     <div>
       <div className="header">
         <div className="container">
           <div className="header-content">
-            <div className="logo">Transport Offerte System</div>
+            <div className="logo">{systemTitle}</div>
             <div className="user-menu">
               <span className="text-gray-600">Willkommen, {user?.name}</span>
               <button onClick={logout} className="btn btn-secondary">

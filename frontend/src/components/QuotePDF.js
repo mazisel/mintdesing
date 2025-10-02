@@ -12,10 +12,12 @@ const QuotePDF = () => {
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState(null);
+  const [swissQR, setSwissQR] = useState(null);
 
   useEffect(() => {
     fetchQuote();
     fetchCompany();
+    fetchSwissQR();
   }, [id]);
 
   const fetchQuote = async () => {
@@ -35,6 +37,20 @@ const QuotePDF = () => {
       setCompany(response.data);
     } catch (error) {
       console.error('Error fetching company:', error);
+    }
+  };
+
+  const fetchSwissQR = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/quotes/${id}/swiss-qr`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setSwissQR(response.data);
+    } catch (error) {
+      console.error('Error fetching Swiss QR code:', error);
     }
   };
 
@@ -317,6 +333,68 @@ const QuotePDF = () => {
             <p>Rechnungen sind innert 30 Tagen netto zahlbar.</p>
             <p>Bei Neukunden behalten wir uns Barzahlung oder Vorkasse vor.</p>
           </div>
+
+          {/* Swiss QR Code Section */}
+          {swissQR && (
+            <div className="swiss-qr-section" style={{
+              marginTop: '2rem',
+              padding: '1rem',
+              border: '2px solid #dc2626',
+              borderRadius: '8px',
+              backgroundColor: '#fff',
+              pageBreakInside: 'avoid'
+            }}>
+              <h4 className="font-bold mb-3 text-red-600" style={{fontSize: '14px', color: '#dc2626', textAlign: 'center'}}>
+                Swiss QR Rechnung
+              </h4>
+              <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap'}}>
+                {/* QR Code */}
+                <div style={{flex: '0 0 auto'}}>
+                  <img 
+                    src={swissQR.qr_code} 
+                    alt="Swiss QR Code" 
+                    style={{
+                      width: '200px',
+                      height: '200px',
+                      border: '1px solid #d1d5db'
+                    }}
+                  />
+                  <p style={{fontSize: '10px', textAlign: 'center', marginTop: '0.5rem', color: '#6b7280'}}>
+                    Swiss QR Code
+                  </p>
+                </div>
+
+                {/* Payment Information */}
+                <div style={{flex: '1', minWidth: '300px', fontSize: '11px'}}>
+                  <div style={{marginBottom: '1rem'}}>
+                    <h5 style={{fontWeight: 'bold', marginBottom: '0.5rem', color: '#374151'}}>Zahlbar an:</h5>
+                    <div style={{backgroundColor: '#f9fafb', padding: '0.75rem', borderRadius: '4px'}}>
+                      <div><strong>IBAN:</strong> {swissQR.payment_info.iban}</div>
+                      <div><strong>Empfänger:</strong> {swissQR.payment_info.creditor}</div>
+                      {company?.address && <div>{company.address.split('\n')[0]}</div>}
+                      {company?.bank_name && <div><strong>Bank:</strong> {company.bank_name}</div>}
+                    </div>
+                  </div>
+                  
+                  <div style={{marginBottom: '1rem'}}>
+                    <h5 style={{fontWeight: 'bold', marginBottom: '0.5rem', color: '#374151'}}>Zahlungsinformationen:</h5>
+                    <div style={{backgroundColor: '#fef2f2', padding: '0.75rem', borderRadius: '4px'}}>
+                      <div><strong>Betrag:</strong> <span style={{fontSize: '16px', fontWeight: 'bold', color: '#dc2626'}}>CHF {swissQR.payment_info.amount}</span></div>
+                      <div><strong>Währung:</strong> {swissQR.payment_info.currency}</div>
+                      <div><strong>Referenz:</strong> {swissQR.payment_info.reference}</div>
+                    </div>
+                  </div>
+
+                  <div style={{fontSize: '10px', color: '#6b7280', lineHeight: '1.4'}}>
+                    <p>
+                      <strong>💡 Hinweis:</strong> Scannen Sie den QR-Code mit Ihrer E-Banking oder Mobile Banking App 
+                      für eine einfache und fehlerfreie Zahlung. Alle Zahlungsinformationen werden automatisch übernommen.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
@@ -10,6 +10,20 @@ const QuoteCreator = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [systemTitle, setSystemTitle] = useState('Transport Offerte System');
+
+  useEffect(() => {
+    fetchSystemSettings();
+  }, []);
+
+  const fetchSystemSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/system-settings`);
+      setSystemTitle(response.data.title);
+    } catch (error) {
+      console.error('Error fetching system settings:', error);
+    }
+  };
 
   const [quote, setQuote] = useState({
     customer: {
@@ -172,7 +186,7 @@ const QuoteCreator = () => {
       <div className="header">
         <div className="container">
           <div className="header-content">
-            <div className="logo">Transport Offerte System</div>
+            <div className="logo">{systemTitle}</div>
             <div className="user-menu">
               <span className="text-gray-600">Willkommen, {user?.name}</span>
               <button onClick={logout} className="btn btn-secondary">

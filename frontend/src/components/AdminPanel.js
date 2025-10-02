@@ -17,10 +17,50 @@ const AdminPanel = () => {
     role: 'member'
   });
   const [showAddUser, setShowAddUser] = useState(false);
+  const [systemTitle, setSystemTitle] = useState('');
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [company, setCompany] = useState(null);
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [companyForm, setCompanyForm] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
+    logo_url: '',
+    iban: '',
+    bank_name: '',
+    swift_bic: ''
+  });
 
   useEffect(() => {
     fetchUsers();
+    fetchSystemSettings();
+    fetchCompany();
   }, []);
+
+  const fetchSystemSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/system-settings`);
+      setSystemTitle(response.data.title);
+      setNewTitle(response.data.title);
+    } catch (error) {
+      console.error('Error fetching system settings:', error);
+    }
+  };
+
+  const handleUpdateTitle = async () => {
+    try {
+      await axios.put(`${API}/system-settings`, { title: newTitle });
+      setSystemTitle(newTitle);
+      setEditingTitle(false);
+      // Sayfayı yenile
+      window.location.reload();
+    } catch (error) {
+      alert('Fehler beim Aktualisieren des Systemtitels');
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -53,6 +93,28 @@ const AdminPanel = () => {
       } catch (error) {
         alert('Fehler beim Löschen des Benutzers');
       }
+    }
+  };
+
+  const fetchCompany = async () => {
+    try {
+      const response = await axios.get(`${API}/company`);
+      setCompany(response.data);
+      setCompanyForm(response.data);
+    } catch (error) {
+      console.error('Error fetching company:', error);
+    }
+  };
+
+  const handleUpdateCompany = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${API}/company`, companyForm);
+      setCompany(companyForm);
+      setEditingCompany(false);
+      alert('Firmendaten erfolgreich aktualisiert');
+    } catch (error) {
+      alert('Fehler beim Aktualisieren der Firmendaten');
     }
   };
 
@@ -206,6 +268,233 @@ const AdminPanel = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="card mb-6">
+          <div className="card-header">
+            <h3 className="card-title">System Einstellungen</h3>
+          </div>
+          <div className="card-body">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                System Titel
+              </label>
+              {editingTitle ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="form-input flex-1"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="System Titel eingeben"
+                  />
+                  <button
+                    onClick={handleUpdateTitle}
+                    className="btn btn-primary"
+                  >
+                    Speichern
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingTitle(false);
+                      setNewTitle(systemTitle);
+                    }}
+                    className="btn btn-secondary"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-900 font-medium">{systemTitle}</span>
+                  <button
+                    onClick={() => setEditingTitle(true)}
+                    className="btn btn-primary"
+                    style={{fontSize: '0.875rem', padding: '0.375rem 0.75rem'}}
+                  >
+                    Bearbeiten
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="card mb-6">
+          <div className="card-header">
+            <div className="flex justify-between items-center">
+              <h3 className="card-title">Firma Informationen & Bankdaten</h3>
+              {!editingCompany && (
+                <button
+                  onClick={() => setEditingCompany(true)}
+                  className="btn btn-primary"
+                >
+                  Bearbeiten
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="card-body">
+            {editingCompany ? (
+              <form onSubmit={handleUpdateCompany}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="form-label">Firmenname</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={companyForm.name}
+                      onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Adresse</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={companyForm.address}
+                      onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Telefon</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={companyForm.phone}
+                      onChange={(e) => setCompanyForm({...companyForm, phone: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">E-Mail</label>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={companyForm.email}
+                      onChange={(e) => setCompanyForm({...companyForm, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Website</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={companyForm.website}
+                      onChange={(e) => setCompanyForm({...companyForm, website: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Logo URL</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={companyForm.logo_url}
+                      onChange={(e) => setCompanyForm({...companyForm, logo_url: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group md:col-span-2">
+                    <h4 className="font-semibold text-red-600 mb-3">Bankdaten für Swiss QR Rechnung</h4>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">IBAN</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={companyForm.iban}
+                      onChange={(e) => setCompanyForm({...companyForm, iban: e.target.value})}
+                      placeholder="CH93 0076 2011 6238 5295 7"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Bank Name</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={companyForm.bank_name}
+                      onChange={(e) => setCompanyForm({...companyForm, bank_name: e.target.value})}
+                      placeholder="UBS Switzerland AG"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">SWIFT/BIC</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={companyForm.swift_bic}
+                      onChange={(e) => setCompanyForm({...companyForm, swift_bic: e.target.value})}
+                      placeholder="UBSWCHZH80A"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button type="submit" className="btn btn-primary">
+                    Speichern
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCompany(false);
+                      setCompanyForm(company);
+                    }}
+                    className="btn btn-secondary"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                {company && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-sm text-gray-600">Firmenname</label>
+                      <p className="font-medium">{company.name}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-sm text-gray-600">Adresse</label>
+                      <p className="font-medium">{company.address}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-sm text-gray-600">Telefon</label>
+                      <p className="font-medium">{company.phone}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-sm text-gray-600">E-Mail</label>
+                      <p className="font-medium">{company.email}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-sm text-gray-600">Website</label>
+                      <p className="font-medium">{company.website}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg md:col-span-2">
+                      <label className="text-sm text-gray-600">Logo URL</label>
+                      <p className="font-medium text-xs break-all">{company.logo_url || 'Nicht gesetzt'}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <h4 className="font-semibold text-red-600 mb-3 mt-2">Bankdaten für Swiss QR Rechnung</h4>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      <label className="text-sm text-gray-600">IBAN</label>
+                      <p className="font-medium">{company.iban || 'Nicht gesetzt'}</p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      <label className="text-sm text-gray-600">Bank Name</label>
+                      <p className="font-medium">{company.bank_name || 'Nicht gesetzt'}</p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      <label className="text-sm text-gray-600">SWIFT/BIC</label>
+                      <p className="font-medium">{company.swift_bic || 'Nicht gesetzt'}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

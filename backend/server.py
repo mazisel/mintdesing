@@ -13,6 +13,10 @@ from datetime import datetime, timezone
 import bcrypt
 import jwt
 from enum import Enum
+import qrcode
+import io
+import base64
+from fastapi.responses import Response
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -63,6 +67,9 @@ class Company(BaseModel):
     email: str
     website: str
     logo_url: Optional[str] = None
+    iban: Optional[str] = "CH93 0076 2011 6238 5295 7"
+    bank_name: Optional[str] = "UBS Switzerland AG"
+    swift_bic: Optional[str] = "UBSWCHZH80A"
 
 class CompanyUpdate(BaseModel):
     name: str
@@ -71,6 +78,17 @@ class CompanyUpdate(BaseModel):
     email: str
     website: str
     logo_url: Optional[str] = None
+    iban: Optional[str] = None
+    bank_name: Optional[str] = None
+    swift_bic: Optional[str] = None
+
+class SystemSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str = "Transport Offerte System"
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SystemSettingsUpdate(BaseModel):
+    title: str
 
 class TransportDetail(BaseModel):
     pickup_date: str
@@ -228,7 +246,10 @@ async def get_company(current_user: User = Depends(get_current_user)):
             "phone": "+41 31 55 55 55",
             "email": "info@ammann-transport.ch",
             "website": "www.ammann-transport.ch",
-            "logo_url": "https://ammanncotransport.ch/wp-content/uploads/2025/09/WhatsApp_Bild_2025-09-03_um_10.30.52_21275bd5-removebg-preview.png"
+            "logo_url": "https://ammanncotransport.ch/wp-content/uploads/2025/09/WhatsApp_Bild_2025-09-03_um_10.30.52_21275bd5-removebg-preview.png",
+            "iban": "CH93 0076 2011 6238 5295 7",
+            "bank_name": "UBS Switzerland AG",
+            "swift_bic": "UBSWCHZH80A"
         }
     return Company(**company)
 
@@ -240,6 +261,27 @@ async def update_company(company_data: CompanyUpdate, current_user: User = Depen
     company_dict = company_data.dict()
     await db.company.replace_one({}, company_dict, upsert=True)
     return {"message": "Company updated successfully"}
+
+# System settings routes
+@api_router.get("/system-settings")
+async def get_system_settings(current_user: User = Depends(get_current_user)):
+    settings = await db.system_settings.find_one()
+    if not settings:
+        # Return default settings
+        return SystemSettings()
+    return SystemSettings(**settings)
+
+@api_router.put("/system-settings")
+async def update_system_settings(settings_data: SystemSettingsUpdate, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    settings_dict = settings_data.dict()
+    settings_dict['updated_at'] = datetime.now(timezone.utc)
+    settings_dict['id'] = str(uuid.uuid4())
+    
+    await db.system_settings.replace_one({}, settings_dict, upsert=True)
+    return {"message": "System settings updated successfully"}
 
 # Quote routes
 @api_router.post("/quotes", response_model=Quote)
@@ -273,6 +315,103 @@ async def delete_quote(quote_id: str, current_user: User = Depends(get_current_u
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Quote not found")
     return {"message": "Quote deleted successfully"}
+
+@api_router.get("/quotes/{quote_id}/swiss-qr")
+async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_current_user)):
+    """Generate Swiss QR code for a quote"""
+    # Fetch quote
+    quote = await db.quotes.find_one({"id": quote_id})
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    quote_obj = Quote(**quote)
+    
+    # Fetch company info
+    company = await db.company.find_one()
+    if not company:
+        company = {
+            "name": "Ammann & Co Transport GmbH",
+            "address": "Str. Bern",
+            "phone": "+41 31 55 55 55",
+            "email": "info@ammann-transport.ch",
+            "iban": "CH93 0076 2011 6238 5295 7",
+        }
+    
+    # Generate Swiss QR Code payload according to Swiss Payment Standards
+    # Format: https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf
+    
+    # Clean IBAN (remove spaces)
+    iban = company.get('iban', 'CH93 0076 2011 6238 5295 7').replace(' ', '')
+    
+    # Build QR code data according to Swiss QR Bill standard
+    qr_data_lines = [
+        "SPC",  # QR Type
+        "0200",  # Version
+        "1",  # Coding Type (1 = UTF-8)
+        iban,  # IBAN
+        "K",  # Creditor Address Type (K = Combined, S = Structured)
+        company.get('name', 'Ammann & Co Transport GmbH')[:70],  # Name (max 70 chars)
+        company.get('address', 'Str. Bern')[:70],  # Street or Address Line 1
+        "",  # Building number or Address Line 2
+        "3000",  # Postal code
+        "Bern",  # Town
+        "CH",  # Country
+        "",  # Ultimate Creditor Address Type (empty if not used)
+        "",  # Ultimate Creditor Name
+        "",  # Ultimate Creditor Street
+        "",  # Ultimate Creditor Building
+        "",  # Ultimate Creditor Postal
+        "",  # Ultimate Creditor Town
+        "",  # Ultimate Creditor Country
+        f"{quote_obj.grand_total:.2f}",  # Amount
+        "CHF",  # Currency
+        "K",  # Ultimate Debtor Address Type
+        quote_obj.customer.company_name[:70],  # Debtor Name
+        quote_obj.customer.address[:70],  # Debtor Address
+        "",  # Debtor Building
+        quote_obj.customer.postal_code[:16],  # Debtor Postal
+        "",  # Debtor Town
+        "CH",  # Debtor Country
+        "QRR",  # Reference Type (QRR, SCOR, or NON)
+        "",  # Reference (empty for NON type, or QR reference number)
+        f"Transport-Offerte {quote_obj.quote_number}",  # Unstructured Message
+        "EPD",  # Trailer (End Payment Data)
+        "",  # Bill information
+        "",  # Alternative procedure parameter 1
+        "",  # Alternative procedure parameter 2
+    ]
+    
+    qr_data = "\r\n".join(qr_data_lines)
+    
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    
+    # Create image
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to base64
+    img_buffer = io.BytesIO()
+    img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    img_base64 = base64.b64encode(img_buffer.getvalue()).decode()
+    
+    return {
+        "qr_code": f"data:image/png;base64,{img_base64}",
+        "payment_info": {
+            "iban": iban,
+            "amount": f"{quote_obj.grand_total:.2f}",
+            "currency": "CHF",
+            "creditor": company.get('name', 'Ammann & Co Transport GmbH'),
+            "reference": f"Transport-Offerte {quote_obj.quote_number}"
+        }
+    }
 
 # Include the router in the main app
 app.include_router(api_router)

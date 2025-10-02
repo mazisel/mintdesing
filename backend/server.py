@@ -316,15 +316,33 @@ async def delete_quote(quote_id: str, current_user: User = Depends(get_current_u
         raise HTTPException(status_code=404, detail="Quote not found")
     return {"message": "Quote deleted successfully"}
 
+@api_router.get("/debug/swiss-qr-version")
+async def get_swiss_qr_version():
+    """Debug endpoint to check Swiss QR implementation version"""
+    import segno
+    from PIL import Image
+    
+    return {
+        "version": "2.0-SEGNO",
+        "implementation": "segno + PIL with Swiss cross",
+        "segno_version": segno.__version__,
+        "PIL_available": True,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status": "NEW_IMPLEMENTATION"
+    }
+
 @api_router.get("/quotes/{quote_id}/swiss-qr")
 async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_current_user)):
-    """Generate Swiss QR code for a quote with Swiss cross in the center"""
+    """Generate Swiss QR code for a quote with Swiss cross in the center - VERSION 2.0"""
+    logger.info(f"🇨🇭 Swiss QR generation started - VERSION 2.0 SEGNO - Quote ID: {quote_id}")
+    
     # Fetch quote
     quote = await db.quotes.find_one({"id": quote_id})
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
     
     quote_obj = Quote(**quote)
+    logger.info(f"Quote found: {quote_obj.quote_number}, Amount: {quote_obj.grand_total}")
     
     # Fetch company info
     company = await db.company.find_one()
@@ -433,6 +451,8 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
     img.save(final_buffer, format='PNG')
     final_buffer.seek(0)
     img_base64 = base64.b64encode(final_buffer.getvalue()).decode()
+    
+    logger.info(f"✅ Swiss QR generated successfully with cross - Size: {len(img_base64)} chars, IBAN: {iban}")
     
     return {
         "qr_code": f"data:image/png;base64,{img_base64}",

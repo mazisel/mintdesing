@@ -16,7 +16,6 @@ from enum import Enum
 import io
 import base64
 from fastapi.responses import Response
-from qrbill import QRBill
 from io import BytesIO
 
 ROOT_DIR = Path(__file__).parent
@@ -345,155 +344,106 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
     address_parts = company.get('address', 'Str. Bern').split('\n')
     street = address_parts[0] if address_parts else 'Str. Bern'
     
-    # Create Swiss QR Bill using qrbill library
-    try:
-        # Extract city from postal code if available
-        debtor_city = "Schweiz"
-        if hasattr(quote_obj.customer, 'city'):
-            debtor_city = quote_obj.customer.city
-            
-        my_bill = QRBill(
-            account=iban,
-            creditor={
-                'name': company.get('name', 'Ammann & Co Transport GmbH')[:70],
-                'pcode': '3000',
-                'city': 'Bern',
-                'street': street[:70],
-                'country': 'CH'
-            },
-            debtor={
-                'name': quote_obj.customer.company_name[:70],
-                'pcode': quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else '8000',
-                'city': debtor_city,
-                'street': quote_obj.customer.address[:70],
-                'country': 'CH'
-            },
-            amount='%.2f' % quote_obj.grand_total,  # String format olarak
-            currency='CHF',
-            additional_information=f"Transport-Offerte {quote_obj.quote_number}",
-            language='de'
-        )
-        
-        # Generate QR code as SVG (with Swiss cross in the center automatically)
-        svg_buffer = BytesIO()
-        my_bill.as_svg(svg_buffer)
-        svg_buffer.seek(0)
-        svg_content = svg_buffer.getvalue()
-        
-        # SVG'yi base64'e çevir
-        svg_base64 = base64.b64encode(svg_content).decode()
-            
-        return {
-            "qr_code": f"data:image/svg+xml;base64,{svg_base64}",
-            "payment_info": {
-                "iban": iban,
-                "amount": f"{quote_obj.grand_total:.2f}",
-                "currency": "CHF",
-                "creditor": company.get('name', 'Ammann & Co Transport GmbH'),
-                "reference": f"Transport-Offerte {quote_obj.quote_number}"
-            }
+    # Create Swiss QR code using segno (reliable and works everywhere)
+    import segno
+    from PIL import Image, ImageDraw
+    
+    # Build QR data string according to Swiss Payment Standards 2.0
+    # Reference: https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf
+    qr_data_lines = [
+        "SPC",  # QRType
+        "0200",  # Version
+        "1",  # Coding (1 = UTF-8)
+        iban,  # IBAN
+        "K",  # Creditor Address Type (K = combined, S = structured)
+        company.get('name', 'Ammann & Co Transport GmbH')[:70],  # Creditor Name
+        street[:70],  # Creditor Street or Address Line 1
+        "",  # Creditor Building Number or Address Line 2
+        "3000",  # Creditor Postal Code
+        "Bern",  # Creditor Town
+        "CH",  # Creditor Country
+        "",  # Ultimate Creditor Address Type
+        "",  # Ultimate Creditor Name
+        "",  # Ultimate Creditor Street
+        "",  # Ultimate Creditor Building Number
+        "",  # Ultimate Creditor Postal Code
+        "",  # Ultimate Creditor Town
+        "",  # Ultimate Creditor Country
+        f"{quote_obj.grand_total:.2f}",  # Amount
+        "CHF",  # Currency
+        "K",  # Debtor Address Type
+        quote_obj.customer.company_name[:70],  # Debtor Name
+        quote_obj.customer.address[:70],  # Debtor Street or Address Line 1
+        "",  # Debtor Building Number or Address Line 2
+        quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else "8000",  # Debtor Postal Code
+        "",  # Debtor Town
+        "CH",  # Debtor Country
+        "NON",  # Reference Type (NON = without reference, QRR = QR reference, SCOR = Creditor Reference)
+        "",  # Reference (empty for NON type)
+        f"Transport-Offerte {quote_obj.quote_number}",  # Additional Information (Unstructured Message)
+        "EPD",  # Trailer (End Payment Data)
+        "",  # Bill Information
+        "",  # Alternative Procedure Parameter 1
+        "",  # Alternative Procedure Parameter 2
+    ]
+    qr_data = "\n".join(qr_data_lines)
+    
+    # Create QR code with segno
+    qr = segno.make(qr_data, error='m', mode='byte')
+    
+    # Save to buffer
+    qr_buffer = BytesIO()
+    qr.save(qr_buffer, kind='png', scale=10, border=4, dark='black', light='white')
+    qr_buffer.seek(0)
+    
+    # Open image and add Swiss cross in center
+    img = Image.open(qr_buffer)
+    width, height = img.size
+    
+    # Create Swiss cross (white background with black cross)
+    cross_size = int(min(width, height) * 0.15)  # 15% of QR code size
+    cross_img = Image.new('RGB', (cross_size, cross_size), 'white')
+    draw = ImageDraw.Draw(cross_img)
+    
+    # Draw black cross
+    cross_thickness = cross_size // 5
+    # Horizontal bar
+    draw.rectangle(
+        [(0, (cross_size - cross_thickness) // 2), 
+         (cross_size, (cross_size + cross_thickness) // 2)],
+        fill='black'
+    )
+    # Vertical bar
+    draw.rectangle(
+        [((cross_size - cross_thickness) // 2, 0), 
+         ((cross_size + cross_thickness) // 2, cross_size)],
+        fill='black'
+    )
+    
+    # Add white border to cross
+    bordered_cross = Image.new('RGB', (cross_size + 4, cross_size + 4), 'white')
+    bordered_cross.paste(cross_img, (2, 2))
+    
+    # Paste cross in center of QR code
+    cross_position = ((width - cross_size - 4) // 2, (height - cross_size - 4) // 2)
+    img.paste(bordered_cross, cross_position)
+    
+    # Convert to base64
+    final_buffer = BytesIO()
+    img.save(final_buffer, format='PNG')
+    final_buffer.seek(0)
+    img_base64 = base64.b64encode(final_buffer.getvalue()).decode()
+    
+    return {
+        "qr_code": f"data:image/png;base64,{img_base64}",
+        "payment_info": {
+            "iban": iban,
+            "amount": f"{quote_obj.grand_total:.2f}",
+            "currency": "CHF",
+            "creditor": company.get('name', 'Ammann & Co Transport GmbH'),
+            "reference": f"Transport-Offerte {quote_obj.quote_number}"
         }
-    except Exception as e:
-        # Fallback: use segno to create QR with Swiss cross overlay
-        import segno
-        from PIL import Image, ImageDraw
-        
-        # Build QR data string according to Swiss Payment Standards 2.0
-        # Reference: https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf
-        qr_data_lines = [
-            "SPC",  # QRType
-            "0200",  # Version
-            "1",  # Coding (1 = UTF-8)
-            iban,  # IBAN
-            "K",  # Creditor Address Type (K = combined, S = structured)
-            company.get('name', 'Ammann & Co Transport GmbH')[:70],  # Creditor Name
-            street[:70],  # Creditor Street or Address Line 1
-            "",  # Creditor Building Number or Address Line 2
-            "3000",  # Creditor Postal Code
-            "Bern",  # Creditor Town
-            "CH",  # Creditor Country
-            "",  # Ultimate Creditor Address Type
-            "",  # Ultimate Creditor Name
-            "",  # Ultimate Creditor Street
-            "",  # Ultimate Creditor Building Number
-            "",  # Ultimate Creditor Postal Code
-            "",  # Ultimate Creditor Town
-            "",  # Ultimate Creditor Country
-            f"{quote_obj.grand_total:.2f}",  # Amount
-            "CHF",  # Currency
-            "K",  # Debtor Address Type
-            quote_obj.customer.company_name[:70],  # Debtor Name
-            quote_obj.customer.address[:70],  # Debtor Street or Address Line 1
-            "",  # Debtor Building Number or Address Line 2
-            quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else "0000",  # Debtor Postal Code
-            "",  # Debtor Town (leave empty or add city name)
-            "CH",  # Debtor Country
-            "NON",  # Reference Type (NON = without reference, QRR = QR reference, SCOR = Creditor Reference)
-            "",  # Reference (empty for NON type)
-            f"Transport-Offerte {quote_obj.quote_number}",  # Additional Information (Unstructured Message)
-            "EPD",  # Trailer (End Payment Data)
-            "",  # Bill Information
-            "",  # Alternative Procedure Parameter 1
-            "",  # Alternative Procedure Parameter 2
-        ]
-        qr_data = "\n".join(qr_data_lines)  # Use \n instead of \r\n
-        
-        # Create QR code with segno
-        qr = segno.make(qr_data, error='m', mode='byte')
-        
-        # Save to buffer
-        qr_buffer = BytesIO()
-        qr.save(qr_buffer, kind='png', scale=10, border=4, dark='black', light='white')
-        qr_buffer.seek(0)
-        
-        # Open image and add Swiss cross in center
-        img = Image.open(qr_buffer)
-        width, height = img.size
-        
-        # Create Swiss cross (white background with black cross)
-        cross_size = int(min(width, height) * 0.15)  # 15% of QR code size
-        cross_img = Image.new('RGB', (cross_size, cross_size), 'white')
-        draw = ImageDraw.Draw(cross_img)
-        
-        # Draw black cross
-        cross_thickness = cross_size // 5
-        # Horizontal bar
-        draw.rectangle(
-            [(0, (cross_size - cross_thickness) // 2), 
-             (cross_size, (cross_size + cross_thickness) // 2)],
-            fill='black'
-        )
-        # Vertical bar
-        draw.rectangle(
-            [((cross_size - cross_thickness) // 2, 0), 
-             ((cross_size + cross_thickness) // 2, cross_size)],
-            fill='black'
-        )
-        
-        # Add white border to cross
-        bordered_cross = Image.new('RGB', (cross_size + 4, cross_size + 4), 'white')
-        bordered_cross.paste(cross_img, (2, 2))
-        
-        # Paste cross in center of QR code
-        cross_position = ((width - cross_size - 4) // 2, (height - cross_size - 4) // 2)
-        img.paste(bordered_cross, cross_position)
-        
-        # Convert to base64
-        final_buffer = BytesIO()
-        img.save(final_buffer, format='PNG')
-        final_buffer.seek(0)
-        img_base64 = base64.b64encode(final_buffer.getvalue()).decode()
-        
-        return {
-            "qr_code": f"data:image/png;base64,{img_base64}",
-            "payment_info": {
-                "iban": iban,
-                "amount": f"{quote_obj.grand_total:.2f}",
-                "currency": "CHF",
-                "creditor": company.get('name', 'Ammann & Co Transport GmbH'),
-                "reference": f"Transport-Offerte {quote_obj.quote_number}"
-            }
-        }
+    }
 
 # Include the router in the main app
 app.include_router(api_router)

@@ -66,5 +66,4 @@ tzdata==2025.2
 urllib3==2.5.0
 uvicorn==0.25.0
 watchfiles==1.1.0
-Pillow==11.0.0
-segno==1.6.1
+qrbill==1.1.0

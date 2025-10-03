@@ -16,9 +16,8 @@ from enum import Enum
 import io
 import base64
 from fastapi.responses import Response
-from io import BytesIO
-import segno
-from PIL import Image, ImageDraw
+from io import BytesIO, StringIO
+from qrbill import QRBill
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -321,136 +320,101 @@ async def delete_quote(quote_id: str, current_user: User = Depends(get_current_u
 @api_router.get("/debug/swiss-qr-version")
 async def get_swiss_qr_version():
     """Debug endpoint to check Swiss QR implementation version"""
+    import qrbill
     return {
-        "version": "4.0-SEGNO-STABLE",
-        "implementation": "segno + PIL (Swiss Payment Standards 2.0 compliant)",
-        "segno_version": segno.__version__,
+        "version": "5.0-QRBILL-SVG",
+        "implementation": "qrbill library (Official Swiss QR Bill - SVG output)",
+        "qrbill_version": qrbill.__version__,
+        "output_format": "SVG (base64 encoded)",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "status": "STABLE_PRODUCTION"
+        "status": "OFFICIAL_PACKAGE",
+        "features": [
+            "Swiss Payment Standards 2.0 compliant",
+            "Swiss cross in QR code",
+            "Full payment information",
+            "Browser compatible (SVG)"
+        ]
     }
 
 @api_router.get("/quotes/{quote_id}/swiss-qr")
 async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_current_user)):
-    """Generate Swiss QR Bill using segno package (Swiss Payment Standards 2.0)"""
-    logger.info(f"🇨🇭 Swiss QR generation started - Quote ID: {quote_id}")
+    """Generate Swiss QR Bill using official qrbill library"""
+    logger.info(f"🇨🇭 Swiss QR generation started (qrbill library) - Quote ID: {quote_id}")
     
-    # Fetch quote
-    quote = await db.quotes.find_one({"id": quote_id})
-    if not quote:
-        raise HTTPException(status_code=404, detail="Quote not found")
-    
-    quote_obj = Quote(**quote)
-    
-    # Fetch company info
-    company = await db.company.find_one()
-    if not company:
-        company = {
-            "name": "Ammann & Co Transport GmbH",
-            "address": "Str. Bern",
-            "phone": "+41 31 55 55 55",
-            "email": "info@ammann-transport.ch",
-            "iban": "CH93 0076 2011 6238 5295 7",
+    try:
+        # Fetch quote
+        quote = await db.quotes.find_one({"id": quote_id})
+        if not quote:
+            raise HTTPException(status_code=404, detail="Quote not found")
+        
+        quote_obj = Quote(**quote)
+        
+        # Fetch company info
+        company = await db.company.find_one()
+        if not company:
+            company = {
+                "name": "Ammann & Co Transport GmbH",
+                "address": "Str. Bern",
+                "iban": "CH93 0076 2011 6238 5295 7",
+            }
+        
+        # Clean IBAN
+        iban = company.get('iban', 'CH93 0076 2011 6238 5295 7').replace(' ', '')
+        
+        # Parse address
+        address_parts = company.get('address', 'Str. Bern').split('\n')
+        street = address_parts[0] if address_parts else 'Str. Bern'
+        
+        # Create QRBill using dict format (qrbill accepts dict)
+        my_bill = QRBill(
+            account=iban,
+            creditor={
+                'name': company.get('name', 'Ammann & Co Transport GmbH')[:70],
+                'street': street[:70],
+                'pcode': '3000',
+                'city': 'Bern',
+                'country': 'CH'
+            },
+            debtor={
+                'name': quote_obj.customer.company_name[:70],
+                'street': quote_obj.customer.address[:70],
+                'pcode': quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else '8000',
+                'city': 'Schweiz',
+                'country': 'CH'
+            },
+            amount='%.2f' % quote_obj.grand_total,
+            currency='CHF',
+            additional_information=f"Transport-Offerte {quote_obj.quote_number}",
+            language='de'
+        )
+        
+        # Generate SVG (qrbill creates professional Swiss QR Bill)
+        svg_buffer = StringIO()
+        my_bill.as_svg(svg_buffer)
+        svg_buffer.seek(0)
+        svg_content = svg_buffer.read()
+        
+        # Encode SVG to base64 for data URI
+        svg_bytes = svg_content.encode('utf-8')
+        svg_base64 = base64.b64encode(svg_bytes).decode()
+        
+        logger.info(f"✅ Swiss QR Bill (SVG) generated - Size: {len(svg_content)} chars, IBAN: {iban}")
+        
+        return {
+            "qr_code": f"data:image/svg+xml;base64,{svg_base64}",
+            "qr_code_svg": svg_content,  # Raw SVG for direct use
+            "payment_info": {
+                "iban": iban,
+                "amount": f"{quote_obj.grand_total:.2f}",
+                "currency": "CHF",
+                "creditor": company.get('name', 'Ammann & Co Transport GmbH'),
+                "reference": f"Transport-Offerte {quote_obj.quote_number}"
+            }
         }
-    
-    # Clean IBAN (remove spaces)
-    iban = company.get('iban', 'CH93 0076 2011 6238 5295 7').replace(' ', '')
-    
-    # Parse address
-    address_parts = company.get('address', 'Str. Bern').split('\n')
-    street = address_parts[0] if address_parts else 'Str. Bern'
-    
-    # Build Swiss QR Bill data according to Swiss Payment Standards 2.0
-    # Reference: https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf
-    qr_data_lines = [
-        "SPC",  # QRType
-        "0200",  # Version
-        "1",  # Coding (UTF-8)
-        iban,  # IBAN
-        "K",  # Creditor Address Type (K = combined)
-        company.get('name', 'Ammann & Co Transport GmbH')[:70],
-        street[:70],
-        "",  # Building number
-        "3000",  # Postal code
-        "Bern",  # Town
-        "CH",  # Country
-        "",  # Ultimate Creditor (7 empty fields)
-        "", "", "", "", "", "",
-        f"{quote_obj.grand_total:.2f}",  # Amount
-        "CHF",  # Currency
-        "K",  # Debtor Address Type
-        quote_obj.customer.company_name[:70],
-        quote_obj.customer.address[:70],
-        "",
-        quote_obj.customer.postal_code[:16] if quote_obj.customer.postal_code else "8000",
-        "",
-        "CH",
-        "NON",  # Reference Type
-        "",  # Reference
-        f"Transport-Offerte {quote_obj.quote_number}",  # Additional Information
-        "EPD",  # End Payment Data
-        "", "", ""  # Alternative schemes
-    ]
-    
-    qr_data = "\n".join(qr_data_lines)
-    
-    # Generate QR code using segno (Swiss QR compatible)
-    qr = segno.make(qr_data, error='m', mode='byte')
-    
-    # Save to buffer as PNG
-    qr_buffer = BytesIO()
-    qr.save(qr_buffer, kind='png', scale=10, border=4, dark='black', light='white')
-    qr_buffer.seek(0)
-    
-    # Add Swiss cross in the center
-    img = Image.open(qr_buffer)
-    width, height = img.size
-    
-    # Create Swiss cross (15% of QR size)
-    cross_size = int(min(width, height) * 0.15)
-    cross_img = Image.new('RGB', (cross_size, cross_size), 'white')
-    draw = ImageDraw.Draw(cross_img)
-    
-    # Draw black cross
-    cross_thickness = cross_size // 5
-    # Horizontal bar
-    draw.rectangle(
-        [(0, (cross_size - cross_thickness) // 2), 
-         (cross_size, (cross_size + cross_thickness) // 2)],
-        fill='black'
-    )
-    # Vertical bar
-    draw.rectangle(
-        [((cross_size - cross_thickness) // 2, 0), 
-         ((cross_size + cross_thickness) // 2, cross_size)],
-        fill='black'
-    )
-    
-    # Add white border around cross
-    bordered_cross = Image.new('RGB', (cross_size + 4, cross_size + 4), 'white')
-    bordered_cross.paste(cross_img, (2, 2))
-    
-    # Paste cross in center of QR code
-    cross_position = ((width - cross_size - 4) // 2, (height - cross_size - 4) // 2)
-    img.paste(bordered_cross, cross_position)
-    
-    # Convert to base64
-    final_buffer = BytesIO()
-    img.save(final_buffer, format='PNG')
-    final_buffer.seek(0)
-    img_base64 = base64.b64encode(final_buffer.getvalue()).decode()
-    
-    logger.info(f"✅ Swiss QR generated - Size: {len(img_base64)} chars, IBAN: {iban}")
-    
-    return {
-        "qr_code": f"data:image/png;base64,{img_base64}",
-        "payment_info": {
-            "iban": iban,
-            "amount": f"{quote_obj.grand_total:.2f}",
-            "currency": "CHF",
-            "creditor": company.get('name', 'Ammann & Co Transport GmbH'),
-            "reference": f"Transport-Offerte {quote_obj.quote_number}"
-        }
-    }
+        
+    except Exception as e:
+        logger.error(f"❌ Error generating Swiss QR Bill: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Swiss QR generation error: {str(e)}")
 
 # Include the router in the main app
 app.include_router(api_router)

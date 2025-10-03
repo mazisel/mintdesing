@@ -347,14 +347,14 @@ const QuotePDF = () => {
               justifyContent: 'center',
               alignItems: 'center'
             }}>
-              {/* QR Code - Centered and Larger */}
+              {/* QR Code - Centered and Much Larger */}
               <div style={{textAlign: 'center'}}>
                 <img 
                   src={swissQR.qr_code} 
                   alt="Swiss QR Code" 
                   style={{
-                    width: '300px',
-                    height: '300px',
+                    width: '600px',
+                    height: '600px',
                     maxWidth: '100%',
                     height: 'auto'
                   }}

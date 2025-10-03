@@ -18,8 +18,6 @@ import base64
 from fastapi.responses import Response
 from io import BytesIO
 from qrbill import QRBill
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -391,20 +389,44 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
             language='de'
         )
         
-        # Generate QR code as SVG first
-        svg_buffer = BytesIO()
-        my_bill.as_svg(svg_buffer)
-        svg_buffer.seek(0)
-        
-        # Convert SVG to PNG using svglib and reportlab
+        # Get QR code image directly from qrbill
+        # qrbill creates a PIL Image with the Swiss cross already embedded
         from PIL import Image
-        drawing = svg2rlg(svg_buffer)
-        png_buffer = BytesIO()
-        renderPM.drawToFile(drawing, png_buffer, fmt='PNG', dpi=150)
-        png_buffer.seek(0)
         
-        # Convert to base64
-        img_base64 = base64.b64encode(png_buffer.getvalue()).decode()
+        # Try to get the QR image directly
+        try:
+            qr_img = my_bill.qr_image()
+            # If it's a PIL Image, convert to PNG
+            if hasattr(qr_img, 'save'):
+                img_buffer = BytesIO()
+                qr_img.save(img_buffer, format='PNG')
+                img_buffer.seek(0)
+                img_base64 = base64.b64encode(img_buffer.getvalue()).decode()
+            else:
+                # If it's SVG, just encode it
+                img_base64 = base64.b64encode(str(qr_img).encode()).decode()
+        except:
+            # Fallback: Get SVG and return as SVG
+            svg_buffer = BytesIO()
+            my_bill.as_svg(svg_buffer)
+            svg_buffer.seek(0)
+            svg_data = svg_buffer.getvalue()
+            
+            # Return SVG as data URI
+            svg_base64 = base64.b64encode(svg_data).decode()
+            
+            logger.info(f"✅ Swiss QR Bill generated as SVG - Size: {len(svg_base64)} chars, IBAN: {iban}")
+            
+            return {
+                "qr_code": f"data:image/svg+xml;base64,{svg_base64}",
+                "payment_info": {
+                    "iban": iban,
+                    "amount": f"{quote_obj.grand_total:.2f}",
+                    "currency": "CHF",
+                    "creditor": company.get('name', 'Ammann & Co Transport GmbH'),
+                    "reference": f"Transport-Offerte {quote_obj.quote_number}"
+                }
+            }
         
         logger.info(f"✅ Official Swiss QR Bill generated - Size: {len(img_base64)} chars, IBAN: {iban}")
         
@@ -420,7 +442,7 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
         }
         
     except Exception as e:
-        logger.error(f"❌ Error generating Swiss QR Bill: {str(e)}")
+        logger.error(f"❌ Error generating Swiss QR Bill: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error generating Swiss QR: {str(e)}")
 
 # Include the router in the main app

@@ -7,7 +7,7 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import uuid
 from datetime import datetime, timezone
 import bcrypt
@@ -26,7 +26,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 def _ensure_resolvable_mongo_url(url: str) -> str:
     """If configured host cannot be resolved (common when running outside Docker),
-    fall back to localhost or an override host."""
+    fall back to an override host or alternate URL when explicitly provided."""
     try:
         parsed = urlparse(url)
     except Exception:
@@ -41,29 +41,106 @@ def _ensure_resolvable_mongo_url(url: str) -> str:
         socket.gethostbyname(host)
         return url
     except socket.gaierror:
-        fallback_host = os.environ.get('MONGO_HOST_FALLBACK', '127.0.0.1')
-        userinfo = ''
-        if parsed.username:
-            userinfo = parsed.username
-            if parsed.password:
-                userinfo += f":{parsed.password}"
-            userinfo += '@'
-        port = f":{parsed.port}" if parsed.port else ''
-        netloc = f"{userinfo}{fallback_host}{port}"
-        fallback_url = urlunparse((
-            parsed.scheme,
-            netloc,
-            parsed.path,
-            parsed.params,
-            parsed.query,
-            parsed.fragment
-        ))
-        logging.warning(
-            "Mongo host '%s' could not be resolved. Falling back to '%s'.",
-            host,
-            fallback_host
+        fallback_url = os.environ.get('MONGO_URL_FALLBACK', '').strip()
+        if fallback_url:
+            logging.warning(
+                "Mongo host '%s' could not be resolved. Falling back to explicit MONGO_URL_FALLBACK.",
+                host
+            )
+            return fallback_url
+
+        fallback_host = os.environ.get('MONGO_HOST_FALLBACK', '').strip()
+        if fallback_host:
+            userinfo = ''
+            if parsed.username:
+                userinfo = parsed.username
+                if parsed.password:
+                    userinfo += f":{parsed.password}"
+                userinfo += '@'
+            port = f":{parsed.port}" if parsed.port else ''
+            netloc = f"{userinfo}{fallback_host}{port}"
+            fallback_url = urlunparse((
+                parsed.scheme,
+                netloc,
+                parsed.path,
+                parsed.params,
+                parsed.query,
+                parsed.fragment
+            ))
+            logging.warning(
+                "Mongo host '%s' could not be resolved. Falling back to host override '%s'.",
+                host,
+                fallback_host
+            )
+            return fallback_url
+
+        logging.error(
+            "Mongo host '%s' could not be resolved and no fallback configured. "
+            "Set MONGO_HOST_FALLBACK or MONGO_URL_FALLBACK to override, or use "
+            "a resolvable hostname/IP in MONGO_URL.",
+            host
         )
-        return fallback_url
+        return url
+
+def _parse_origin_list(raw: str) -> List[str]:
+    """Split comma separated origins and strip whitespace."""
+    if not raw:
+        return []
+    return [origin.strip().rstrip('/') for origin in raw.split(',') if origin.strip()]
+
+def _determine_cors_policy() -> Tuple[List[str], bool, Optional[str]]:
+    """
+    Returns a tuple of (origins, allow_credentials, origin_regex).
+    Supports the following env vars:
+      - CORS_ORIGINS: comma separated list
+      - CORS_EXTRA_ORIGINS: optional comma separated list appended
+      - CORS_ALLOW_ALL / CORS_ALLOW_ORIGIN_REGEX: wildcard fallback options
+      - CORS_ALLOW_CREDENTIALS: force credentials (default true unless wildcard)
+      - PUBLIC_BASE_URL / PUBLIC_FRONTEND_HOST / PUBLIC_FRONTEND_PORT: convenience extras
+    """
+    allow_all_flag = os.environ.get('CORS_ALLOW_ALL', '').lower() in ('1', 'true', 'yes')
+    regex = os.environ.get('CORS_ALLOW_ORIGIN_REGEX', '').strip() or None
+
+    origins = _parse_origin_list(os.environ.get('CORS_ORIGINS', ''))
+    origins += _parse_origin_list(os.environ.get('CORS_EXTRA_ORIGINS', ''))
+
+    public_base = os.environ.get('PUBLIC_BASE_URL', '').strip()
+    if public_base:
+        origins.append(public_base.rstrip('/'))
+
+    frontend_host = os.environ.get('PUBLIC_FRONTEND_HOST', '').strip()
+    frontend_port = os.environ.get('PUBLIC_FRONTEND_PORT', '').strip()
+    if frontend_host:
+        scheme_list = ['http://', 'https://'] if not frontend_host.startswith(('http://', 'https://')) else ['']
+        for scheme in scheme_list:
+            origin = f"{scheme}{frontend_host}"
+            if frontend_port and ':' not in frontend_host:
+                origin = f"{origin}:{frontend_port}"
+            origins.append(origin.rstrip('/'))
+
+    origins = [o for o in origins if o]
+    # Deduplicate while preserving order
+    seen = set()
+    deduped = []
+    for origin in origins:
+        if origin not in seen:
+            deduped.append(origin)
+            seen.add(origin)
+    origins = deduped
+
+    if allow_all_flag or '*' in origins:
+        logging.warning("CORS_ALLOW_ALL enabled; allowing all origins without credentials.")
+        return ['*'], False, regex
+
+    allow_credentials_env = os.environ.get('CORS_ALLOW_CREDENTIALS', 'true').lower()
+    allow_credentials = allow_credentials_env in ('1', 'true', 'yes')
+
+    if not origins and not regex:
+        # Sensible defaults for local development
+        origins = ['http://localhost:3000', 'http://localhost:3005']
+        logging.info("CORS_ORIGINS not set; using default local origins %s", origins)
+
+    return origins, allow_credentials, regex
 
 # MongoDB connection
 mongo_url = os.environ.get(
@@ -467,12 +544,21 @@ async def get_swiss_qr_code(quote_id: str, current_user: User = Depends(get_curr
 # Include the router in the main app
 app.include_router(api_router)
 
+cors_origins, cors_allow_credentials, cors_regex = _determine_cors_policy()
+logging.info(
+    "Configuring CORS. Origins: %s, Allow credentials: %s, Regex: %s",
+    cors_origins,
+    cors_allow_credentials,
+    cors_regex
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_credentials=cors_allow_credentials,
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origin_regex=cors_regex
 )
 
 # Configure logging

@@ -18,14 +18,62 @@ import base64
 from fastapi.responses import Response
 from io import BytesIO, StringIO
 from qrbill import QRBill
+import socket
+from urllib.parse import urlparse, urlunparse
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+def _ensure_resolvable_mongo_url(url: str) -> str:
+    """If configured host cannot be resolved (common when running outside Docker),
+    fall back to localhost or an override host."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        logging.warning("Invalid Mongo URL provided, fallback to default localhost URL")
+        return "mongodb://admin:password123@127.0.0.1:27017/mintdegisn?authSource=admin"
+
+    host = parsed.hostname
+    if not host:
+        return url
+
+    try:
+        socket.gethostbyname(host)
+        return url
+    except socket.gaierror:
+        fallback_host = os.environ.get('MONGO_HOST_FALLBACK', '127.0.0.1')
+        userinfo = ''
+        if parsed.username:
+            userinfo = parsed.username
+            if parsed.password:
+                userinfo += f":{parsed.password}"
+            userinfo += '@'
+        port = f":{parsed.port}" if parsed.port else ''
+        netloc = f"{userinfo}{fallback_host}{port}"
+        fallback_url = urlunparse((
+            parsed.scheme,
+            netloc,
+            parsed.path,
+            parsed.params,
+            parsed.query,
+            parsed.fragment
+        ))
+        logging.warning(
+            "Mongo host '%s' could not be resolved. Falling back to '%s'.",
+            host,
+            fallback_host
+        )
+        return fallback_url
+
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ.get(
+    'MONGO_URL',
+    'mongodb://admin:password123@mongodb:27017/mintdegisn?authSource=admin'
+)
+mongo_url = _ensure_resolvable_mongo_url(mongo_url)
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db_name = os.environ.get('DB_NAME', 'mintdegisn')
+db = client[db_name]
 
 # Create the main app without a prefix
 app = FastAPI()

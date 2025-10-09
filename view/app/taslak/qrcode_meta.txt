@@ -1,0 +1,16 @@
+Array
+(
+    [time] => 2025-10-09T12:30:05+00:00
+    [reference_field] => OrderCode
+    [reference_value] => ABC123
+    [reference_normalized] => ABC123
+    [qr_reference_type] => SCOR
+    [qr_reference_value] => RF47ABC123
+    [order_keys] => Array
+        (
+            [0] => OrderCode
+            [1] => ToplamTutar
+            [2] => OrderID
+        )
+
+)

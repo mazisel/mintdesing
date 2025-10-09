@@ -1,0 +1,24 @@
+{
+    "decimal":        "",
+    "emptyTable":     "Tabloda veri bulunmamaktadır",
+    "info":           "Toplam _TOTAL_ kayıttan _START_ - _END_ arasındaki kayıtlar gösteriliyor",
+    "infoEmpty":      "Kayıt bulunmuyor",
+    "infoFiltered":   "(_MAX_ toplam kayıttan filtrelenen)",
+    "infoPostFix":    "",
+    "thousands":      ",",
+    "lengthMenu":     "_MENU_ kayıt göster",
+    "loadingRecords": "Yükleniyor...",
+    "processing":     "İşleniyor...",
+    "search":         "Ara:",
+    "zeroRecords":    "Eşleşen kayıt bulunamadı",
+    "paginate": {
+        "first":      "İlk",
+        "last":       "Son",
+        "next":       "Sonraki",
+        "previous":   "Önceki"
+    },
+    "aria": {
+        "sortAscending":  ": artan sıralamayı etkinleştir",
+        "sortDescending": ": azalan sıralamayı etkinleştir"
+    }
+}

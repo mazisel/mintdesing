@@ -1,0 +1,5 @@
+User-Agent: *
+Disallow: /*.zip$
+User-Agent: *
+Allow: /
+Sitemap: https://domain.ch/sitemap.xml

@@ -1,0 +1,49 @@
+[2025-10-05 19:37:29] Using reference field 'OrderCode' => 20251005-123
+[2025-10-05 19:37:29] Wrote meta to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_meta.txt
+[2025-10-05 19:37:29] Constructed QRCODE with RefType=SCOR RefValue=RF3820251005123
+[2025-10-05 19:37:29] Payload written to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_payload.txt
+[2025-10-05 19:37:29] Builder::build() succeeded
+[2025-10-05 19:37:29] QR image saved to: /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode.png
+[2025-10-05 19:41:23] Using SCOR reference field 'OrderCode' => 20251005123
+[2025-10-05 19:41:23] Wrote meta to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_meta.txt
+[2025-10-05 19:41:23] Constructed QRCODE with RefType=SCOR RefValue=20251005123
+[2025-10-05 19:41:23] Payload written to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_payload.txt
+[2025-10-05 19:41:23] Builder::build() succeeded
+[2025-10-05 19:41:23] QR image saved to: /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode.png
+[2025-10-09 12:22:11] Using SCOR reference field 'OrderCode' => 20251005123
+[2025-10-09 12:22:11] Wrote meta to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_meta.txt
+[2025-10-09 12:22:11] Constructed QRCODE with RefType=SCOR RefValue=20251005123
+[2025-10-09 12:22:11] Payload written to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_payload.txt
+[2025-10-09 12:22:11] Builder::build() succeeded
+[2025-10-09 12:22:11] QR image saved to: /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode.png
+[2025-10-09 12:23:11] Using SCOR reference field 'OrderCode' => 123
+[2025-10-09 12:23:11] Wrote meta to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_meta.txt
+[2025-10-09 12:23:11] Constructed QRCODE with RefType=SCOR RefValue=123
+[2025-10-09 12:23:11] Payload written to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_payload.txt
+[2025-10-09 12:23:11] Builder::build() succeeded
+[2025-10-09 12:23:11] QR image saved to: /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode.png
+[2025-10-09 12:23:19] Using SCOR reference field 'OrderCode' => 
+[2025-10-09 12:23:19] Reference contained no digits, using NON
+[2025-10-09 12:23:19] Wrote meta to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_meta.txt
+[2025-10-09 12:23:19] Constructed QRCODE with RefType=NON RefValue=
+[2025-10-09 12:23:19] Payload written to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_payload.txt
+[2025-10-09 12:23:19] Builder::build() succeeded
+[2025-10-09 12:23:19] QR image saved to: /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode.png
+[2025-10-09 12:29:28] Using SCOR reference field 'OrderCode' => RF3820251005123
+[2025-10-09 12:29:28] Wrote meta to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_meta.txt
+[2025-10-09 12:29:28] Constructed QRCODE with RefType=SCOR RefValue=RF3820251005123
+[2025-10-09 12:29:28] Payload written to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_payload.txt
+[2025-10-09 12:29:28] Builder::build() succeeded
+[2025-10-09 12:29:28] QR image saved to: /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode.png
+[2025-10-09 12:29:57] Using SCOR reference field 'OrderCode' => RF3820251005123
+[2025-10-09 12:29:57] Wrote meta to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_meta.txt
+[2025-10-09 12:29:57] Constructed QRCODE with RefType=SCOR RefValue=RF3820251005123
+[2025-10-09 12:29:57] Payload written to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_payload.txt
+[2025-10-09 12:29:57] Builder::build() succeeded
+[2025-10-09 12:29:57] QR image saved to: /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode.png
+[2025-10-09 12:30:05] Using SCOR reference field 'OrderCode' => RF47ABC123
+[2025-10-09 12:30:05] Wrote meta to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_meta.txt
+[2025-10-09 12:30:05] Constructed QRCODE with RefType=SCOR RefValue=RF47ABC123
+[2025-10-09 12:30:05] Payload written to /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode_payload.txt
+[2025-10-09 12:30:05] Builder::build() succeeded
+[2025-10-09 12:30:05] QR image saved to: /Users/oguzart/Downloads/eckpack/view/app/taslak/qrcode.png

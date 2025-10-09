@@ -50,6 +50,21 @@ def _ensure_resolvable_mongo_url(url: str) -> str:
             return fallback_url
 
         fallback_host = os.environ.get('MONGO_HOST_FALLBACK', '').strip()
+        if not fallback_host:
+            fallback_host = '127.0.0.1'
+            logging.warning(
+                "Mongo host '%s' could not be resolved. Falling back to default host '%s'. "
+                "Set MONGO_HOST_FALLBACK or MONGO_URL_FALLBACK to override this behaviour.",
+                host,
+                fallback_host
+            )
+        else:
+            logging.warning(
+                "Mongo host '%s' could not be resolved. Falling back to host override '%s'.",
+                host,
+                fallback_host
+            )
+
         if fallback_host:
             userinfo = ''
             if parsed.username:
@@ -67,11 +82,6 @@ def _ensure_resolvable_mongo_url(url: str) -> str:
                 parsed.query,
                 parsed.fragment
             ))
-            logging.warning(
-                "Mongo host '%s' could not be resolved. Falling back to host override '%s'.",
-                host,
-                fallback_host
-            )
             return fallback_url
 
         logging.error(

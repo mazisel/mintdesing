@@ -282,7 +282,7 @@ try {
         ->encoding(new Encoding('UTF-8'))
         ->errorCorrectionLevel(ErrorCorrectionLevel::High)
         ->size(400)
-        ->margin(-2)
+        ->margin(10)
         ->logoPath(__DIR__.'/taslak/logo.png')
         ->logoResizeToWidth(50)
         ->logoPunchoutBackground(true)

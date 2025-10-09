@@ -74,11 +74,11 @@ if (!function_exists('qr_normalize_reference')) {
         return 'RF' . $checkDigits . $base;
     }
 
-    function qr_extract_reference($raw, &$details = null)
-    {
-        $details = [
-            'raw' => $raw,
-            'normalized' => '',
+function qr_extract_reference($raw, &$details = null)
+{
+    $details = [
+        'raw' => $raw,
+        'normalized' => '',
             'base' => '',
             'truncated' => false,
             'from_existing_iso' => false,
@@ -111,9 +111,50 @@ if (!function_exists('qr_normalize_reference')) {
         $iso = qr_build_iso11649_from_base($base);
         if ($iso === null) {
             return ['type' => 'NON', 'value' => ''];
-        }
-        return ['type' => 'SCOR', 'value' => $iso];
     }
+    return ['type' => 'SCOR', 'value' => $iso];
+}
+
+function qr_build_combined_address_lines($name, $line1, $line2, $postal, $city, $country = 'CH')
+{
+    $name = trim((string) $name);
+    $partsLine1 = [];
+    foreach ([$line1, $line2] as $part) {
+        $part = trim((string) $part);
+        if ($part !== '') {
+            $partsLine1[] = $part;
+        }
+    }
+    $combinedLine1 = trim(implode(' ', $partsLine1));
+    if ($combinedLine1 === '') {
+        $combinedLine1 = $name;
+    }
+
+    $postal = trim((string) $postal);
+    $city = trim((string) $city);
+    $combinedLine2Parts = [];
+    if ($postal !== '') {
+        $combinedLine2Parts[] = $postal;
+    }
+    if ($city !== '') {
+        $combinedLine2Parts[] = $city;
+    }
+    $combinedLine2 = trim(implode(' ', $combinedLine2Parts));
+    if ($combinedLine2 === '') {
+        $combinedLine2 = $postal !== '' ? $postal : $city;
+    }
+    if ($combinedLine2 === '') {
+        // As a last resort keep QR readable by repeating line1 or name
+        $combinedLine2 = $combinedLine1 !== '' ? $combinedLine1 : $name;
+    }
+
+    $country = strtoupper(trim((string) $country));
+    if ($country === '') {
+        $country = 'CH';
+    }
+
+    return ['K', $name, $combinedLine1, $combinedLine2, '', '', $country];
+}
 }
 
 // Basic sanity checks
@@ -222,25 +263,34 @@ $lines[] = '0200';
 $lines[] = '1';
 $lines[] = $Iban;
 
-// Creditor address block (use combined mode K to avoid invalid structured fields)
-$lines[] = 'K';
-$lines[] = trim($bankaRow['BankaUser'] ?? '');
-$lines[] = trim($bankaRow['BankaAdres'] ?? '');
-$lines[] = trim($bankaRow['BankaAdres2'] ?? '');
-$lines[] = trim($bankaRow['BankaPostaKodu'] ?? '');
-$lines[] = trim($bankaRow['BankaCity'] ?? '');
-$lines[] = 'CH';
-// creditor additional empty address lines per layout
-for ($i = 0; $i < 6; $i++) { $lines[] = ''; }
+$creditorCountry = $bankaRow['BankaCountry'] ?? ($bankaRow['BankaUlke'] ?? 'CH');
+$creditorLines = qr_build_combined_address_lines(
+    $bankaRow['BankaUser'] ?? '',
+    $bankaRow['BankaAdres'] ?? '',
+    $bankaRow['BankaAdres2'] ?? '',
+    $bankaRow['BankaPostaKodu'] ?? '',
+    $bankaRow['BankaCity'] ?? '',
+    $creditorCountry
+);
+foreach ($creditorLines as $line) {
+    $lines[] = $line;
+}
+// Ultimate creditor block unused (7 empties)
+for ($i = 0; $i < 7; $i++) { $lines[] = ''; }
 $lines[] = $ToplamTutar;
 $lines[] = $Currency;
-$lines[] = 'K';
-$lines[] = trim(($cariRow['CariUnvan'] ?? '') . ' ' . ($cariRow['CariName'] ?? '') . ' ' . ($cariRow['CariSurname'] ?? ''));
-$lines[] = trim($cariRow['CariAdres'] ?? '');
-$lines[] = trim($cariRow['CariAdres2'] ?? '');
-$lines[] = trim($cariRow['CariPostakodu'] ?? '');
-$lines[] = trim($cariRow['CariCity'] ?? '');
-$lines[] = 'CH';
+$debtorCountry = $cariRow['CariCountry'] ?? ($cariRow['CariUlke'] ?? 'CH');
+$debtorLines = qr_build_combined_address_lines(
+    trim(($cariRow['CariUnvan'] ?? '') . ' ' . ($cariRow['CariName'] ?? '') . ' ' . ($cariRow['CariSurname'] ?? '')),
+    $cariRow['CariAdres'] ?? '',
+    $cariRow['CariAdres2'] ?? '',
+    $cariRow['CariPostakodu'] ?? '',
+    $cariRow['CariCity'] ?? '',
+    $debtorCountry
+);
+foreach ($debtorLines as $line) {
+    $lines[] = $line;
+}
 
 // Reference block: insert either NON or SCOR + value
 if (!empty($RefType) && $RefType === 'NON') {

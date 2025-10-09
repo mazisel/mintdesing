@@ -221,23 +221,25 @@ $lines[] = 'SPC';
 $lines[] = '0200';
 $lines[] = '1';
 $lines[] = $Iban;
-$lines[] = 'S';
-$lines[] = isset($bankaRow['BankaUser']) ? $bankaRow['BankaUser'] : '';
-$lines[] = isset($bankaRow['BankaAdres']) ? $bankaRow['BankaAdres'] : '';
-$lines[] = isset($bankaRow['BankaAdres2']) ? $bankaRow['BankaAdres2'] : '';
-$lines[] = isset($bankaRow['BankaPostaKodu']) ? $bankaRow['BankaPostaKodu'] : '';
-$lines[] = isset($bankaRow['BankaCity']) ? $bankaRow['BankaCity'] : '';
+
+// Creditor address block (use combined mode K to avoid invalid structured fields)
+$lines[] = 'K';
+$lines[] = trim($bankaRow['BankaUser'] ?? '');
+$lines[] = trim($bankaRow['BankaAdres'] ?? '');
+$lines[] = trim($bankaRow['BankaAdres2'] ?? '');
+$lines[] = trim($bankaRow['BankaPostaKodu'] ?? '');
+$lines[] = trim($bankaRow['BankaCity'] ?? '');
 $lines[] = 'CH';
 // creditor additional empty address lines per layout
 for ($i = 0; $i < 6; $i++) { $lines[] = ''; }
 $lines[] = $ToplamTutar;
 $lines[] = $Currency;
-$lines[] = 'S';
+$lines[] = 'K';
 $lines[] = trim(($cariRow['CariUnvan'] ?? '') . ' ' . ($cariRow['CariName'] ?? '') . ' ' . ($cariRow['CariSurname'] ?? ''));
-$lines[] = $cariRow['CariAdres'] ?? '';
-$lines[] = $cariRow['CariAdres2'] ?? '';
-$lines[] = $cariRow['CariPostakodu'] ?? '';
-$lines[] = $cariRow['CariCity'] ?? '';
+$lines[] = trim($cariRow['CariAdres'] ?? '');
+$lines[] = trim($cariRow['CariAdres2'] ?? '');
+$lines[] = trim($cariRow['CariPostakodu'] ?? '');
+$lines[] = trim($cariRow['CariCity'] ?? '');
 $lines[] = 'CH';
 
 // Reference block: insert either NON or SCOR + value

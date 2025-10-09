@@ -10,6 +10,18 @@
     if ($Images[0]) {
       $Logo=BASE_URL.SitePath.'images/pdf/'.$Images[0];
     }
+
+    $QrReferenceValue = $GLOBALS['QrReferenceValue'] ?? '';
+    $QrReferenceRaw = $GLOBALS['QrReferenceRaw'] ?? '';
+    $QrReferenceType = $GLOBALS['QrReferenceType'] ?? '';
+    $QrReferenceDisplay = $GLOBALS['QrReferenceDisplay'] ?? '';
+    $RenderedReference = $QrReferenceDisplay;
+    if ($RenderedReference === '' && $QrReferenceRaw !== '') {
+      $RenderedReference = $QrReferenceRaw;
+    }
+    if ($RenderedReference === '' && !empty($OrderRow['OrderCode'])) {
+      $RenderedReference = 'RF' . preg_replace('/[^A-Za-z0-9]/', '', (string) $OrderRow['OrderCode']);
+    }
     
 ?>
 
@@ -97,7 +109,7 @@
           <?=nl2br($Firma['FirmaAdres'])?><br><br>
          
           <b style="font-size: 9px;">Referenz</b><br>
-          RF<?=$OrderRow['OrderCode']?> <?=$cariRow['CariCode']?><br><br>
+          <?=htmlspecialchars($RenderedReference)?><?php if (!empty($cariRow['CariCode'])) {?> <?=htmlspecialchars($cariRow['CariCode'])?><?php } ?><br><br>
 
           <b style="font-size: 9px;">Zahlbar durch</b><br>
           <?=$cariRow['CariName']?> <?=$cariRow['CariSurname']?>, <?=$cariRow['CariUnvan']?><br>
@@ -132,7 +144,7 @@
               <?=nl2br($Firma['FirmaAdres'])?><br><br>
              
               <b style="font-size: 10px;">Referenz</b><br>
-              RF<?=$OrderRow['OrderCode']?> <?=$cariRow['CariCode']?><br><br>
+              <?=htmlspecialchars($RenderedReference)?><?php if (!empty($cariRow['CariCode'])) {?> <?=htmlspecialchars($cariRow['CariCode'])?><?php } ?><br><br>
 
               <b style="font-size: 10px;">Zahlbar durch</b><br>
               <?=$cariRow['CariName']?> <?=$cariRow['CariSurname']?><br><?=$cariRow['CariUnvan']?><br>

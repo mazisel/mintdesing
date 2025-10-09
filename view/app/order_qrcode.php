@@ -256,6 +256,28 @@ if ($RefType === 'NON' && isset($OrderCode) && trim((string)$OrderCode) !== '') 
     }
 }
 
+$QrReference = [
+    'type' => $RefType,
+    'value' => $RefValue,
+    'raw' => $Reference,
+    'field' => $ReferenceField,
+    'details' => $ReferenceDetails,
+];
+$GLOBALS['QrReference'] = $QrReference;
+if (!isset($GLOBALS['QrReferenceValue']) || $GLOBALS['QrReferenceValue'] === null) {
+    $GLOBALS['QrReferenceValue'] = $RefValue;
+}
+if (!isset($GLOBALS['QrReferenceRaw']) || $GLOBALS['QrReferenceRaw'] === null) {
+    $GLOBALS['QrReferenceRaw'] = $Reference;
+}
+if (!isset($GLOBALS['QrReferenceType']) || $GLOBALS['QrReferenceType'] === null) {
+    $GLOBALS['QrReferenceType'] = $RefType;
+}
+if (!isset($GLOBALS['QrReferenceField']) || $GLOBALS['QrReferenceField'] === null) {
+    $GLOBALS['QrReferenceField'] = $ReferenceField;
+}
+$GLOBALS['QrReferenceDisplay'] = $RefValue ?: $Reference;
+
 // Build Swiss QR payload according to expected layout using an array of lines
 $lines = [];
 $lines[] = 'SPC';

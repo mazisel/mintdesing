@@ -100,17 +100,21 @@ function qr_extract_reference($raw, &$details = null)
                 $base = substr($base, 2);
             }
         }
-        if ($base === '') {
-            return ['type' => 'NON', 'value' => ''];
-        }
-        if (strlen($base) > 21) {
-            $details['truncated'] = true;
-            $base = substr($base, 0, 21);
-        }
-        $details['base'] = $base;
-        $iso = qr_build_iso11649_from_base($base);
-        if ($iso === null) {
-            return ['type' => 'NON', 'value' => ''];
+    if ($base === '') {
+        return ['type' => 'NON', 'value' => ''];
+    }
+    if (strlen($base) > 21) {
+        $details['truncated'] = true;
+        $base = substr($base, 0, 21);
+    }
+    if (ctype_digit($base) && strlen($base) < 21) {
+        $details['padded'] = true;
+        $base = str_pad($base, 21, '0', STR_PAD_LEFT);
+    }
+    $details['base'] = $base;
+    $iso = qr_build_iso11649_from_base($base);
+    if ($iso === null) {
+        return ['type' => 'NON', 'value' => ''];
     }
     return ['type' => 'SCOR', 'value' => $iso];
 }
@@ -200,8 +204,12 @@ if ($ReferenceField !== null) {
         $logMsg = "Using SCOR reference field '$ReferenceField' => $RefValue";
         if (!empty($ReferenceDetails['truncated'])) {
             $logMsg .= ' (truncated to 21 chars)';
-        } elseif (!empty($ReferenceDetails['from_existing_iso'])) {
+        }
+        if (!empty($ReferenceDetails['from_existing_iso'])) {
             $logMsg .= ' (provided ISO 11649)';
+        }
+        if (!empty($ReferenceDetails['padded'])) {
+            $logMsg .= ' (left padded to 21 digits)';
         }
         qr_log($logMsg);
     } else {
@@ -219,6 +227,8 @@ $meta = [
     'reference_field' => $ReferenceField,
     'reference_value' => $Reference,
     'reference_normalized' => $ReferenceDetails['normalized'] ?? '',
+    'reference_base' => $ReferenceDetails['base'] ?? '',
+    'reference_padded' => !empty($ReferenceDetails['padded']),
     'qr_reference_type' => $RefType,
     'qr_reference_value' => $RefValue,
     'order_keys' => array_keys($OrderRow),
@@ -247,6 +257,8 @@ if ($RefType === 'NON' && isset($OrderCode) && trim((string)$OrderCode) !== '') 
         $meta['reference_field'] = $ReferenceField;
         $meta['reference_value'] = $Reference;
         $meta['reference_normalized'] = $ReferenceDetails['normalized'] ?? '';
+        $meta['reference_base'] = $ReferenceDetails['base'] ?? '';
+        $meta['reference_padded'] = !empty($ReferenceDetails['padded']);
         $meta['qr_reference_type'] = $RefType;
         $meta['qr_reference_value'] = $RefValue;
         @file_put_contents($metaPath, print_r($meta, true));

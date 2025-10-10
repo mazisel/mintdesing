@@ -142,7 +142,7 @@ def _determine_cors_policy() -> Tuple[List[str], bool, Optional[str]]:
     origins = deduped
 
     if allow_all_flag or '*' in origins or regex == '*':
-        logging.warning("CORS wildcard enabled; allowing all origins without credentials.")
+        logging.warning("CORS wildcard enabled; allowing all origins with credentials disabled.")
         return ['*'], False, None
 
     allow_credentials_env = os.environ.get('CORS_ALLOW_CREDENTIALS', 'true').lower()

@@ -148,15 +148,18 @@ def _determine_cors_policy() -> Tuple[List[str], bool, Optional[str]]:
     allow_credentials_env = os.environ.get('CORS_ALLOW_CREDENTIALS', 'true').lower()
     allow_credentials = allow_credentials_env in ('1', 'true', 'yes')
 
-    if not origins and not regex:
-        # Sensible defaults for development plus IPv4-based hosts
-        origins = ['http://localhost:3000', 'http://localhost:3005']
+    if not regex:
         default_ip_regex = os.environ.get('CORS_DEFAULT_IP_REGEX', '').strip()
         if default_ip_regex.lower() == 'none':
             default_ip_regex = ''
         if not default_ip_regex:
             default_ip_regex = r"^https?://(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::\d+)?$"
         regex = default_ip_regex
+        logging.info("CORS origin regex set to %s", regex)
+
+    if not origins:
+        # Sensible defaults for development plus IPv4-based hosts
+        origins = ['http://localhost:3000', 'http://localhost:3005']
         logging.info(
             "CORS_ORIGINS not set; using default local origins %s and IP regex %s",
             origins,

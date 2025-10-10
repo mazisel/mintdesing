@@ -109,7 +109,10 @@ def _determine_cors_policy() -> Tuple[List[str], bool, Optional[str]]:
       - PUBLIC_BASE_URL / PUBLIC_FRONTEND_HOST / PUBLIC_FRONTEND_PORT: convenience extras
     """
     allow_all_flag = os.environ.get('CORS_ALLOW_ALL', '').lower() in ('1', 'true', 'yes')
-    regex = os.environ.get('CORS_ALLOW_ORIGIN_REGEX', '').strip() or None
+    raw_regex = os.environ.get('CORS_ALLOW_ORIGIN_REGEX', '').strip()
+    if raw_regex.lower() == 'none':
+        raw_regex = ''
+    regex = raw_regex or None
 
     origins = _parse_origin_list(os.environ.get('CORS_ORIGINS', ''))
     origins += _parse_origin_list(os.environ.get('CORS_EXTRA_ORIGINS', ''))
@@ -146,9 +149,19 @@ def _determine_cors_policy() -> Tuple[List[str], bool, Optional[str]]:
     allow_credentials = allow_credentials_env in ('1', 'true', 'yes')
 
     if not origins and not regex:
-        # Sensible defaults for local development
+        # Sensible defaults for development plus IPv4-based hosts
         origins = ['http://localhost:3000', 'http://localhost:3005']
-        logging.info("CORS_ORIGINS not set; using default local origins %s", origins)
+        default_ip_regex = os.environ.get('CORS_DEFAULT_IP_REGEX', '').strip()
+        if default_ip_regex.lower() == 'none':
+            default_ip_regex = ''
+        if not default_ip_regex:
+            default_ip_regex = r"^https?://(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::\d+)?$"
+        regex = default_ip_regex
+        logging.info(
+            "CORS_ORIGINS not set; using default local origins %s and IP regex %s",
+            origins,
+            regex
+        )
 
     return origins, allow_credentials, regex
 

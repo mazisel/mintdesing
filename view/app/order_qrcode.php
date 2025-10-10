@@ -338,7 +338,7 @@ if (!empty($RefType) && $RefType === 'NON') {
 }
 
 $lines[] = 'EPD';
-$QRCODE = implode("\n", $lines) . "\n";
+$QRCODE = implode("\r\n", $lines) . "\r\n";
 qr_log("Constructed QRCODE with RefType={$RefType} RefValue={$RefValue}");
 
 // Write payload to file for debugging

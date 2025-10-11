@@ -25,7 +25,7 @@ services:
       MONGO_URL: mongodb://admin:password123@mongodb:27017/mintdegisn?authSource=admin
       DB_NAME: mintdegisn
       JWT_SECRET: mintdegisn-super-secret-jwt-key-2025-docker
-      CORS_ORIGINS: http://212.87.221.79:3006,http://localhost:3006
+      CORS_ORIGINS: http://178.254.28.29:3006,http://localhost:3006
       CORS_ALLOW_ALL: "1"
     ports:
       - "8081:8080"
@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     environment:
-      REACT_APP_BACKEND_URL: http://212.87.221.79:8081
+      REACT_APP_BACKEND_URL: http://178.254.28.29:8081
     ports:
       - "3006:3005"
     depends_on:

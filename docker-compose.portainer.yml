@@ -26,6 +26,7 @@ services:
       DB_NAME: mintdegisn
       JWT_SECRET: mintdegisn-super-secret-jwt-key-2025-docker
       CORS_ORIGINS: http://212.87.221.79:3006,http://localhost:3006
+      CORS_ALLOW_ALL: "1"
     ports:
       - "8081:8080"
     depends_on:

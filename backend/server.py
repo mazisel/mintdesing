@@ -578,14 +578,59 @@ logging.info(
     cors_regex
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=cors_allow_credentials,
-    allow_origins=cors_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    allow_origin_regex=cors_regex
-)
+if cors_origins == ['*'] and cors_regex is None:
+    allow_methods_header = os.environ.get(
+        'CORS_ALLOW_METHODS',
+        'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+    )
+    default_allow_headers = os.environ.get('CORS_ALLOW_HEADERS', '*')
+    expose_headers = os.environ.get('CORS_EXPOSE_HEADERS', '*')
+    max_age = os.environ.get('CORS_MAX_AGE', '86400')
+    custom_allow_credentials = os.environ.get(
+        'CORS_ALLOW_CREDENTIALS', 'false'
+    ).lower() in ('1', 'true', 'yes')
+
+    logging.warning(
+        "Applying custom wildcard CORS middleware (credentials: %s, methods: %s, headers: %s)",
+        custom_allow_credentials,
+        allow_methods_header,
+        default_allow_headers
+    )
+
+    @app.middleware("http")
+    async def permissive_cors(request, call_next):
+        origin = request.headers.get('origin')
+        allow_headers = request.headers.get(
+            'access-control-request-headers',
+            default_allow_headers
+        )
+        headers = {
+            'Access-Control-Allow-Origin': origin if (custom_allow_credentials and origin) else '*',
+            'Vary': 'Origin',
+            'Access-Control-Allow-Methods': allow_methods_header,
+            'Access-Control-Allow-Headers': allow_headers,
+            'Access-Control-Allow-Credentials': 'true' if custom_allow_credentials else 'false',
+            'Access-Control-Expose-Headers': expose_headers,
+            'Access-Control-Max-Age': max_age,
+        }
+        if request.method.upper() == 'OPTIONS':
+            return Response(status_code=204, headers=headers)
+        response = await call_next(request)
+        for key, value in headers.items():
+            if custom_allow_credentials and key == 'Access-Control-Allow-Origin' and origin:
+                response.headers[key] = origin
+            else:
+                response.headers.setdefault(key, value)
+        return response
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=cors_allow_credentials,
+        allow_origins=cors_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        allow_origin_regex=cors_regex
+    )
 
 # Configure logging
 logging.basicConfig(

@@ -14,6 +14,28 @@ const QuotePDF = () => {
   const [company, setCompany] = useState(null);
   const [swissQR, setSwissQR] = useState(null);
 
+  const fallbackCompany = {
+    name: 'Ammann & Co Transport GmbH',
+    address: 'Str. Bern',
+    phone: '+41 31 55 55 55',
+    email: 'info@ammann-transport.ch',
+    website: 'www.ammann-transport.ch',
+    logo_url: 'https://ammanncotransport.ch/wp-content/uploads/2025/09/WhatsApp_Bild_2025-09-03_um_10.30.52_21275bd5-removebg-preview.png',
+  };
+
+  const companyData = {
+    ...fallbackCompany,
+    ...(company || {}),
+  };
+
+  const addressLines = (companyData.address || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  const logoUrl = (company && company.logo_url ? company.logo_url : null) || fallbackCompany.logo_url;
+  const hasLogo = Boolean(logoUrl);
+
   useEffect(() => {
     fetchQuote();
     fetchCompany();
@@ -183,9 +205,9 @@ const QuotePDF = () => {
           {/* Company Header */}
           <div className="company-header">
             <div style={{minWidth: '140px'}}>
-              {company?.logo_url ? (
+              {hasLogo ? (
                 <img 
-                  src={company.logo_url} 
+                  src={logoUrl} 
                   alt="Company Logo" 
                   style={{
                     maxHeight: '70px',
@@ -206,18 +228,26 @@ const QuotePDF = () => {
               <div 
                 className="text-lg font-bold" 
                 style={{
-                  display: company?.logo_url ? 'none' : 'block'
+                  display: hasLogo ? 'none' : 'block'
                 }}
               >
                 LOGO
               </div>
             </div>
             <div className="text-right" style={{fontSize: '10px', lineHeight: '1.3', color: '#4b5563'}}>
-              <div className="font-bold">{company?.name || 'Ammann & Co Transport GmbH'}</div>
-              <div>Str. Bern</div>
-              <div>Tel: +41 31 55 55 55</div>
-              <div>info@ammann-transport.ch</div>
-              <div>www.ammann-transport.ch</div>
+              <div className="font-bold">{companyData.name}</div>
+              {addressLines.map((line, index) => (
+                <div key={`company-address-${index}`}>{line}</div>
+              ))}
+              {companyData.phone && !addressLines.some(line => line.includes(companyData.phone)) && (
+                <div>Tel: {companyData.phone}</div>
+              )}
+              {companyData.email && !addressLines.some(line => line.toLowerCase().includes(companyData.email.toLowerCase())) && (
+                <div>{companyData.email}</div>
+              )}
+              {companyData.website && !addressLines.some(line => line.toLowerCase().includes(companyData.website.toLowerCase())) && (
+                <div>{companyData.website}</div>
+              )}
             </div>
           </div>
 

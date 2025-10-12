@@ -132,22 +132,25 @@ const QuotePDF = () => {
                   <style>
                     @page { size: A4; margin: 10mm; }
                     body { font-family: Arial, sans-serif; margin: 0; }
-                    .pdf-preview { width: 100%; max-width: 210mm; margin: 0 auto; padding: 8mm; box-sizing: border-box; font-size: 11.5px; line-height: 1.3; }
-                    .company-header { background-color: transparent; color: #111827; padding: 0 0 0.75rem 0; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 1px solid #e5e7eb; }
-                    .quote-title { text-align: center; font-size: 1.35rem; font-weight: 600; margin: 0.5rem 0; color: #1f2937; }
-                    .transport-table, .price-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-                    .transport-table th, .transport-table td, .price-table th, .price-table td { border: 1px solid #d1d5db; padding: 0.35rem; text-align: left; font-size: 10px; }
+                    .pdf-preview { width: 100%; max-width: 210mm; margin: 0 auto; padding: 6mm; box-sizing: border-box; font-size: 10.5px; line-height: 1.2; }
+                    .company-header { background-color: transparent; color: #111827; padding: 0 0 0.5rem 0; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+                    .quote-title { text-align: center; font-size: 1.1rem; font-weight: 600; margin: 0.35rem 0; color: #1f2937; }
+                    .quote-info { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+                    .transport-table, .price-table { width: 100%; border-collapse: collapse; margin-bottom: 0.75rem; }
+                    .transport-table th, .transport-table td, .price-table th, .price-table td { border: 1px solid #d1d5db; padding: 0.25rem; text-align: left; font-size: 9.5px; }
                     .transport-table th, .price-table th { background-color: #f3f4f6; font-weight: 600; }
                     .total-row { background-color: #fef2f2; font-weight: 600; }
                     .text-right { text-align: right; }
-                    .advantages-section { margin-top: 1rem; padding: 0.5rem; border-top: 1px solid #e5e7eb; background-color: #fafafa; }
-                    .advantages-section h4 { color: #1f2937; font-size: 12px; font-weight: 600; margin-bottom: 0.5rem; text-align: center; }
+                    .advantages-section { margin-top: 0.5rem; padding: 0.4rem; border-top: 1px solid #e5e7eb; background-color: #fafafa; }
+                    .advantages-section h4 { color: #1f2937; font-size: 11px; font-weight: 600; margin-bottom: 0.35rem; text-align: center; }
                     .advantages-section strong { color: #111827; font-weight: 600; }
-                    .swiss-qr-section { margin-top: 15mm; width: 100%; background-color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+                    .swiss-qr-section { margin-top: 8mm; width: 100%; background-color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; }
                     .swiss-qr-wrapper { text-align: center; width: 100%; }
-                    .swiss-qr-image { width: 140mm; max-width: 100%; height: auto; }
-                    @media (max-width: 768px) { .swiss-qr-section { margin-top: 10mm; } }
-                    @media print { .swiss-qr-section { margin-top: 5mm !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: avoid !important; break-inside: avoid-page !important; } .swiss-qr-wrapper { width: 100% !important; } .swiss-qr-image { width: 120mm !important; max-width: 100% !important; height: auto !important; } }
+                    .swiss-qr-image { width: 110mm; max-width: 100%; height: auto; }
+                    .pdf-preview h3 { font-size: 11px; margin: 0.4rem 0 0.3rem; }
+                    .pdf-preview p { margin: 0.2rem 0; }
+                    @media (max-width: 768px) { .pdf-preview { padding: 8mm; font-size: 10.5px; } .quote-info { grid-template-columns: 1fr; gap: 1rem; } .swiss-qr-section { margin-top: 10mm; } }
+                    @media print { .swiss-qr-section { margin-top: 5mm !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: avoid !important; break-inside: avoid-page !important; } .swiss-qr-wrapper { width: 100% !important; } .swiss-qr-image { width: 110mm !important; max-width: 100% !important; height: auto !important; } }
                   </style>
                 </head>
                 <body>
@@ -179,14 +182,14 @@ const QuotePDF = () => {
         <div className="pdf-preview">
           {/* Company Header */}
           <div className="company-header">
-            <div style={{minWidth: '160px'}}>
+            <div style={{minWidth: '140px'}}>
               {company?.logo_url ? (
                 <img 
                   src={company.logo_url} 
                   alt="Company Logo" 
                   style={{
-                    maxHeight: '80px',
-                    maxWidth: '160px',
+                    maxHeight: '70px',
+                    maxWidth: '140px',
                     width: 'auto',
                     height: 'auto',
                     objectFit: 'contain',
@@ -209,7 +212,7 @@ const QuotePDF = () => {
                 LOGO
               </div>
             </div>
-            <div className="text-right" style={{fontSize: '12px', lineHeight: '1.5', color: '#4b5563'}}>
+            <div className="text-right" style={{fontSize: '10px', lineHeight: '1.3', color: '#4b5563'}}>
               <div className="font-bold">{company?.name || 'Ammann & Co Transport GmbH'}</div>
               <div>Str. Bern</div>
               <div>Tel: +41 31 55 55 55</div>
@@ -311,10 +314,18 @@ const QuotePDF = () => {
 
           {/* Company Advantages */}
           <div className="advantages-section">
-            <h4 className="font-bold mb-3" style={{fontSize: '14px', color: '#1f2937'}}>
+            <h4 className="font-bold mb-3" style={{fontSize: '11px', color: '#1f2937'}}>
               Unsere Vorteile
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3" style={{fontSize: '11px', lineHeight: '1.4'}}>
+            <div 
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gap: '0.4rem',
+                fontSize: '10px',
+                lineHeight: '1.3'
+              }}
+            >
               <div>
                 <strong>🎯 Zuverlässigkeit:</strong> Pünktliche Abholung und termingerechte Lieferung in der ganzen Region.
               </div>

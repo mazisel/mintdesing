@@ -144,13 +144,13 @@ const QuotePDF = () => {
                     .advantages-section { margin-top: 0.5rem; padding: 0.4rem; border-top: 1px solid #e5e7eb; background-color: #fafafa; }
                     .advantages-section h4 { color: #1f2937; font-size: 11px; font-weight: 600; margin-bottom: 0.35rem; text-align: center; }
                     .advantages-section strong { color: #111827; font-weight: 600; }
-                    .swiss-qr-section { margin-top: 8mm; width: 100%; background-color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+                    .swiss-qr-section { margin-top: 0; padding-top: 60mm; padding-bottom: 15mm; width: 100%; background-color: #fff; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; min-height: calc(297mm - 20mm); }
                     .swiss-qr-wrapper { text-align: center; width: 100%; }
                     .swiss-qr-image { width: 110mm; max-width: 100%; height: auto; }
                     .pdf-preview h3 { font-size: 11px; margin: 0.4rem 0 0.3rem; }
                     .pdf-preview p { margin: 0.2rem 0; }
-                    @media (max-width: 768px) { .pdf-preview { padding: 8mm; font-size: 10.5px; } .quote-info { grid-template-columns: 1fr; gap: 1rem; } .swiss-qr-section { margin-top: 10mm; } }
-                    @media print { .swiss-qr-section { margin-top: 5mm !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: avoid !important; break-inside: avoid-page !important; } .swiss-qr-wrapper { width: 100% !important; } .swiss-qr-image { width: 110mm !important; max-width: 100% !important; height: auto !important; } }
+                    @media (max-width: 768px) { .pdf-preview { padding: 8mm; font-size: 10.5px; } .quote-info { grid-template-columns: 1fr; gap: 1rem; } .swiss-qr-section { padding-top: 40mm; min-height: auto; } }
+                    @media print { .swiss-qr-section { margin-top: 0 !important; padding-top: 60mm !important; padding-bottom: 15mm !important; min-height: calc(297mm - 20mm) !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; align-items: center !important; page-break-before: always !important; break-before: page !important; page-break-after: avoid !important; page-break-inside: avoid !important; break-inside: avoid-page !important; } .swiss-qr-wrapper { width: 100% !important; } .swiss-qr-image { width: 110mm !important; max-width: 100% !important; height: auto !important; } }
                   </style>
                 </head>
                 <body>

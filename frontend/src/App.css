@@ -342,14 +342,17 @@ body {
 }
 
 .swiss-qr-section {
-  margin-top: 8mm;
+  margin-top: 0;
+  padding-top: 60mm;
+  padding-bottom: 15mm;
   width: 100%;
   background-color: #ffffff;
   border: none;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
+  min-height: calc(297mm - 20mm);
 }
 
 .swiss-qr-wrapper {
@@ -403,7 +406,9 @@ body {
   }
   
   .swiss-qr-section {
-    margin-top: 10mm;
+    margin-top: 0;
+    padding-top: 40mm;
+    min-height: auto;
   }
 }
 
@@ -441,13 +446,17 @@ body {
   }
   
   .swiss-qr-section {
-    margin-top: 5mm !important;
+    margin-top: 0 !important;
+    padding-top: 60mm !important;
+    padding-bottom: 15mm !important;
+    min-height: calc(297mm - 20mm) !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: center !important;
-    page-break-before: avoid !important;
-    break-before: avoid !important;
+    page-break-before: always !important;
+    break-before: page !important;
+    page-break-after: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid-page !important;
   }

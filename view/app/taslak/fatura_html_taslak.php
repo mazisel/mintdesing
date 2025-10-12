@@ -37,8 +37,9 @@
         border-top: 1px solid #C1CED9; padding: 8px 0; text-align: center; }
         .page_footer {width: 100%;  position: absolute; bottom: 0; left: 0;  padding: 0x; margin: 0px; text-align: center; }
         .page_footer img{width: 100%; margin: 0px; padding: 0px; }
-      .logo {margin-bottom: 10px;  } 
-      .logo img {    height: 50px; }
+      .logo {margin-bottom: 10px; text-align: center; } 
+      .logo img {height: 35px; }
+      .logo-header {text-align: center; margin-bottom: 30px;}
       p{margin: 0px;font-family: Arial, sans-serif;}
       h1 {color: #000; font-size: 2.4em; line-height: 1.4em; font-weight: normal; margin: 0 0 20px 0; background: url(dimension.png); } 
 
@@ -83,18 +84,10 @@
     </style>
   </head>
   <body>
-      <header class="clearfix">
-        <!-- <div class="logo" > <img height="60px" src="<?=$Logo?>"> </div> -->     
-        <div id="company" class="clearfix">
-          <div>
-            <?=$pdfTaslakRow['TaslakIcerik']?>
-          </div>
+      <header class="clearfix logo-header">
+        <div class="logo">
+          <img src="<?=$Logo?>" alt="Logo">
         </div>
-        <div id="project">
-          <div id="project_div1">
-            <div class="logo" > <img height="60px" src="<?=$Logo?>"> </div>
-          </div>
-        </div>  
       </header>
 
       <header class="clearfix">

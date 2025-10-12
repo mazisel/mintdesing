@@ -326,6 +326,32 @@ body {
   font-weight: 600;
 }
 
+.swiss-qr-section {
+  margin-top: 40mm;
+  width: 100%;
+  background-color: #ffffff;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  page-break-before: always;
+  break-before: page;
+  page-break-inside: avoid;
+  break-inside: avoid-page;
+  min-height: 240mm;
+}
+
+.swiss-qr-wrapper {
+  text-align: center;
+  width: 100%;
+}
+
+.swiss-qr-image {
+  width: 160mm;
+  max-width: 100%;
+  height: auto;
+}
+
 /* Utility classes */
 .text-center { text-align: center; }
 .text-right { text-align: right; }
@@ -364,6 +390,11 @@ body {
     padding: 10mm;
     font-size: 11px;
   }
+  
+  .swiss-qr-section {
+    margin-top: 20mm;
+    min-height: 200mm;
+  }
 }
 
 @page {
@@ -397,6 +428,21 @@ body {
     padding: 0;
     max-width: none;
     width: 100%;
+  }
+  
+  .swiss-qr-section {
+    margin-top: 0 !important;
+    min-height: calc(297mm - 20mm) !important;
+    page-break-before: always !important;
+    break-before: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid-page !important;
+  }
+  
+  .swiss-qr-image {
+    width: 160mm !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
   
   /* Logo için özel print stilleri */

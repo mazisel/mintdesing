@@ -143,6 +143,11 @@ const QuotePDF = () => {
                     .advantages-section { margin-top: 1.5rem; padding: 1rem; border-top: 2px solid #e5e7eb; background-color: #fafafa; }
                     .advantages-section h4 { color: #1f2937; font-size: 14px; font-weight: 700; margin-bottom: 0.75rem; text-align: center; }
                     .advantages-section strong { color: #111827; font-weight: 600; }
+                    .swiss-qr-section { margin-top: 40mm; width: 100%; background-color: #fff; display: flex; justify-content: center; align-items: center; page-break-before: always; break-before: page; page-break-inside: avoid; break-inside: avoid-page; min-height: 240mm; }
+                    .swiss-qr-wrapper { text-align: center; width: 100%; }
+                    .swiss-qr-image { width: 160mm; max-width: 100%; height: auto; }
+                    @media (max-width: 768px) { .swiss-qr-section { margin-top: 20mm; min-height: 200mm; } }
+                    @media print { .swiss-qr-section { margin-top: 0 !important; min-height: calc(297mm - 20mm) !important; page-break-before: always !important; break-before: page !important; page-break-inside: avoid !important; break-inside: avoid-page !important; } .swiss-qr-image { width: 160mm !important; max-width: 100% !important; height: auto !important; } }
                   </style>
                 </head>
                 <body>
@@ -340,27 +345,16 @@ const QuotePDF = () => {
 
           {/* Swiss QR Code Section */}
           {swissQR && (
-            <div className="swiss-qr-section" style={{
-              marginTop: '2rem',
-              padding: '1rem',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              backgroundColor: '#fff',
-              pageBreakInside: 'avoid',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}>
-              {/* QR Code - Centered and Much Larger */}
-              <div style={{textAlign: 'center'}}>
+            <div className="swiss-qr-section">
+              <div className="swiss-qr-wrapper">
                 <img 
                   src={swissQR.qr_code} 
                   alt="Swiss QR Code" 
+                  className="swiss-qr-image"
                   style={{
-                    width: '600px',
-                    height: '600px',
-                    maxWidth: '100%',
-                    height: 'auto'
+                    WebkitPrintColorAdjust: 'exact',
+                    colorAdjust: 'exact',
+                    printColorAdjust: 'exact'
                   }}
                 />
               </div>

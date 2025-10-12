@@ -224,12 +224,14 @@ body {
 /* PDF Preview styles */
 .pdf-preview {
   background-color: white;
+  width: 100%;
   max-width: 210mm;
   margin: 0 auto;
-  padding: 20mm;
+  padding: 12mm;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   font-size: 12px;
   line-height: 1.4;
+  box-sizing: border-box;
 }
 
 .company-header {
@@ -364,9 +366,21 @@ body {
   }
 }
 
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
 @media print {
   body {
     background: white;
+    margin: 0;
+  }
+  
+  .container {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   
   .header,
@@ -382,6 +396,7 @@ body {
     margin: 0;
     padding: 0;
     max-width: none;
+    width: 100%;
   }
   
   /* Logo için özel print stilleri */

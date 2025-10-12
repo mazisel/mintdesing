@@ -130,7 +130,9 @@ const QuotePDF = () => {
                   <meta charset="UTF-8">
                   <title>Transport-Offerte ${quote.quote_number}</title>
                   <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    @page { size: A4; margin: 10mm; }
+                    body { font-family: Arial, sans-serif; margin: 0; }
+                    .pdf-preview { width: 100%; max-width: 210mm; margin: 0 auto; padding: 12mm; box-sizing: border-box; }
                     .company-header { background-color: transparent; color: #111827; padding: 0 0 1.25rem 0; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; border-bottom: 1px solid #e5e7eb; }
                     .quote-title { text-align: center; font-size: 1.5rem; font-weight: 600; margin: 1rem 0; color: #1f2937; }
                     .transport-table, .price-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }

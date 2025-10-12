@@ -132,22 +132,22 @@ const QuotePDF = () => {
                   <style>
                     @page { size: A4; margin: 10mm; }
                     body { font-family: Arial, sans-serif; margin: 0; }
-                    .pdf-preview { width: 100%; max-width: 210mm; margin: 0 auto; padding: 12mm; box-sizing: border-box; }
-                    .company-header { background-color: transparent; color: #111827; padding: 0 0 1.25rem 0; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; border-bottom: 1px solid #e5e7eb; }
-                    .quote-title { text-align: center; font-size: 1.5rem; font-weight: 600; margin: 1rem 0; color: #1f2937; }
+                    .pdf-preview { width: 100%; max-width: 210mm; margin: 0 auto; padding: 8mm; box-sizing: border-box; font-size: 11.5px; line-height: 1.3; }
+                    .company-header { background-color: transparent; color: #111827; padding: 0 0 0.75rem 0; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 1px solid #e5e7eb; }
+                    .quote-title { text-align: center; font-size: 1.35rem; font-weight: 600; margin: 0.5rem 0; color: #1f2937; }
                     .transport-table, .price-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-                    .transport-table th, .transport-table td, .price-table th, .price-table td { border: 1px solid #d1d5db; padding: 0.5rem; text-align: left; font-size: 11px; }
+                    .transport-table th, .transport-table td, .price-table th, .price-table td { border: 1px solid #d1d5db; padding: 0.35rem; text-align: left; font-size: 10px; }
                     .transport-table th, .price-table th { background-color: #f3f4f6; font-weight: 600; }
                     .total-row { background-color: #fef2f2; font-weight: 600; }
                     .text-right { text-align: right; }
-                    .advantages-section { margin-top: 1.5rem; padding: 1rem; border-top: 2px solid #e5e7eb; background-color: #fafafa; }
-                    .advantages-section h4 { color: #1f2937; font-size: 14px; font-weight: 700; margin-bottom: 0.75rem; text-align: center; }
+                    .advantages-section { margin-top: 1rem; padding: 0.5rem; border-top: 1px solid #e5e7eb; background-color: #fafafa; }
+                    .advantages-section h4 { color: #1f2937; font-size: 12px; font-weight: 600; margin-bottom: 0.5rem; text-align: center; }
                     .advantages-section strong { color: #111827; font-weight: 600; }
-                    .swiss-qr-section { margin-top: 40mm; width: 100%; background-color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+                    .swiss-qr-section { margin-top: 15mm; width: 100%; background-color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; }
                     .swiss-qr-wrapper { text-align: center; width: 100%; }
-                    .swiss-qr-image { width: 160mm; max-width: 100%; height: auto; }
-                    @media (max-width: 768px) { .swiss-qr-section { margin-top: 20mm; } }
-                    @media print { .swiss-qr-section { margin-top: 0 !important; height: calc(297mm - 20mm) !important; display: flex !important; flex-direction: column !important; justify-content: flex-end !important; align-items: center !important; page-break-before: always !important; break-before: page !important; page-break-inside: avoid !important; break-inside: avoid-page !important; page-break-after: avoid !important; } .swiss-qr-wrapper { width: 100% !important; } .swiss-qr-image { width: 160mm !important; max-width: 100% !important; height: auto !important; } }
+                    .swiss-qr-image { width: 140mm; max-width: 100%; height: auto; }
+                    @media (max-width: 768px) { .swiss-qr-section { margin-top: 10mm; } }
+                    @media print { .swiss-qr-section { margin-top: 5mm !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: avoid !important; break-inside: avoid-page !important; } .swiss-qr-wrapper { width: 100% !important; } .swiss-qr-image { width: 120mm !important; max-width: 100% !important; height: auto !important; } }
                   </style>
                 </head>
                 <body>

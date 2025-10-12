@@ -131,13 +131,16 @@ const QuotePDF = () => {
                   <title>Transport-Offerte ${quote.quote_number}</title>
                   <style>
                     body { font-family: Arial, sans-serif; margin: 20px; }
-                    .company-header { background-color: #b91c1c; color: white; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
-                    .quote-title { text-align: center; font-size: 1.5rem; font-weight: 600; margin: 1rem 0; color: #dc2626; }
+                    .company-header { background-color: transparent; color: #111827; padding: 0 0 1.25rem 0; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; border-bottom: 1px solid #e5e7eb; }
+                    .quote-title { text-align: center; font-size: 1.5rem; font-weight: 600; margin: 1rem 0; color: #1f2937; }
                     .transport-table, .price-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
                     .transport-table th, .transport-table td, .price-table th, .price-table td { border: 1px solid #d1d5db; padding: 0.5rem; text-align: left; font-size: 11px; }
                     .transport-table th, .price-table th { background-color: #f3f4f6; font-weight: 600; }
                     .total-row { background-color: #fef2f2; font-weight: 600; }
                     .text-right { text-align: right; }
+                    .advantages-section { margin-top: 1.5rem; padding: 1rem; border-top: 2px solid #e5e7eb; background-color: #fafafa; }
+                    .advantages-section h4 { color: #1f2937; font-size: 14px; font-weight: 700; margin-bottom: 0.75rem; text-align: center; }
+                    .advantages-section strong { color: #111827; font-weight: 600; }
                   </style>
                 </head>
                 <body>
@@ -169,20 +172,19 @@ const QuotePDF = () => {
         <div className="pdf-preview">
           {/* Company Header */}
           <div className="company-header">
-            <div>
+            <div style={{minWidth: '160px'}}>
               {company?.logo_url ? (
                 <img 
                   src={company.logo_url} 
                   alt="Company Logo" 
                   style={{
-                    maxHeight: '212px',
-                    maxWidth: '212px',
-                    width: '212px',
-                    height: '212px',
+                    maxHeight: '80px',
+                    maxWidth: '160px',
+                    width: 'auto',
+                    height: 'auto',
                     objectFit: 'contain',
-                    filter: 'brightness(0) invert(1)', // Logo'yu beyaz yapar
-                    WebkitPrintColorAdjust: 'exact', // Chrome için
-                    colorAdjust: 'exact', // Diğer tarayıcılar için
+                    WebkitPrintColorAdjust: 'exact',
+                    colorAdjust: 'exact',
                     printColorAdjust: 'exact'
                   }}
                   onError={(e) => {
@@ -200,7 +202,7 @@ const QuotePDF = () => {
                 LOGO
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right" style={{fontSize: '12px', lineHeight: '1.5', color: '#4b5563'}}>
               <div className="font-bold">{company?.name || 'Ammann & Co Transport GmbH'}</div>
               <div>Str. Bern</div>
               <div>Tel: +41 31 55 55 55</div>
@@ -302,7 +304,7 @@ const QuotePDF = () => {
 
           {/* Company Advantages */}
           <div className="advantages-section">
-            <h4 className="font-bold mb-3 text-red-600" style={{fontSize: '14px', color: '#dc2626'}}>
+            <h4 className="font-bold mb-3" style={{fontSize: '14px', color: '#1f2937'}}>
               Unsere Vorteile
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3" style={{fontSize: '11px', lineHeight: '1.4'}}>
@@ -339,7 +341,7 @@ const QuotePDF = () => {
             <div className="swiss-qr-section" style={{
               marginTop: '2rem',
               padding: '1rem',
-              border: '2px solid #dc2626',
+              border: '2px solid #e5e7eb',
               borderRadius: '8px',
               backgroundColor: '#fff',
               pageBreakInside: 'avoid',

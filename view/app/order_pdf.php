@@ -66,7 +66,6 @@
   }else{
     $Logo=BASE_URL.'view/images/'.$SiteAyarSabit['Logo2'];
   }  
-  $Logo=BASE_URL.'view/images/'.$SiteAyarSabit['Logo2'];
   
 
   $htmltaslak = 'taslak/fatura_html_taslak.php';

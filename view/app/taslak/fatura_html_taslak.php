@@ -7,8 +7,9 @@
     $ImageCount=1;
     $Images=json_decode($pdfTaslakRow['Images'],true);  
     $TaslakText = json_decode($pdfTaslakRow['TaslakText'],true);
-    if ($Images[0]) {
-      $Logo=BASE_URL.SitePath.'images/pdf/'.$Images[0];
+    $HeaderLogo = $Logo;
+    if (!empty($Firma['ProfilFoto'])) {
+      $HeaderLogo = BASE_URL."view/images/user/".$Firma['ProfilFoto'];
     }
     if ($Images[1]) {
       $FooterImg=BASE_URL.SitePath.'images/pdf/'.$Images[1];
@@ -38,7 +39,7 @@
         .page_footer {width: 100%;  position: absolute; bottom: 0; left: 0;  padding: 0x; margin: 0px; text-align: center; }
         .page_footer img{width: 100%; margin: 0px; padding: 0px; }
       .logo {margin-bottom: 10px; text-align: center; } 
-      .logo img {height: 35px; }
+      .logo img {max-height: 40px; max-width: 140px; width: auto; height: auto; display: inline-block; }
       .logo-header {text-align: center; margin-bottom: 30px;}
       p{margin: 0px;font-family: Arial, sans-serif;}
       h1 {color: #000; font-size: 2.4em; line-height: 1.4em; font-weight: normal; margin: 0 0 20px 0; background: url(dimension.png); } 
@@ -86,7 +87,7 @@
   <body>
       <header class="clearfix logo-header">
         <div class="logo">
-          <img src="<?=$Logo?>" alt="Logo">
+          <img src="<?=$HeaderLogo?>" alt="Logo">
         </div>
       </header>
 

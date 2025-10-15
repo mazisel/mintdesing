@@ -316,10 +316,11 @@ body {
 }
 
 .qr-payment-terms {
-  margin: 0 auto 12mm;
+  margin: 0 0 12mm;
   width: 100%;
   max-width: 110mm;
   text-align: left;
+  align-self: flex-start;
 }
 
 .qr-payment-terms h4 {

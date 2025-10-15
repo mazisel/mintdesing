@@ -315,6 +315,17 @@ body {
   color: #6b7280;
 }
 
+.qr-payment-terms {
+  margin: 0 auto 12mm;
+  width: 100%;
+  max-width: 110mm;
+  text-align: left;
+}
+
+.qr-payment-terms h4 {
+  text-align: left;
+}
+
 /* Avantajlar bölümü stilleri */
 .advantages-section {
   margin-top: 0.5rem;

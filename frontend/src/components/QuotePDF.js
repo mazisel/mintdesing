@@ -377,17 +377,15 @@ const QuotePDF = () => {
             </div>
           </div>
 
-          {/* Payment Terms */}
-          <div className="payment-terms">
-            <h4 className="font-bold mb-1">Zahlungsbedingungen</h4>
-            <p>Rechnungen sind innert 30 Tagen netto zahlbar.</p>
-            <p>Bei Neukunden behalten wir uns Barzahlung oder Vorkasse vor.</p>
-          </div>
-
           {/* Swiss QR Code Section */}
           {swissQR && (
             <div className="swiss-qr-section">
               <div className="swiss-qr-wrapper">
+                <div className="payment-terms qr-payment-terms">
+                  <h4 className="font-bold mb-1">Zahlungsbedingungen</h4>
+                  <p>Rechnungen sind innert 30 Tagen netto zahlbar.</p>
+                  <p>Bei Neukunden behalten wir uns Barzahlung oder Vorkasse vor.</p>
+                </div>
                 <img 
                   src={swissQR.qr_code} 
                   alt="Swiss QR Code" 
